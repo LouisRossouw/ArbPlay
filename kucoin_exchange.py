@@ -133,5 +133,5 @@ if __name__ == "__main__":
     if GET_ACCOUNT == True:
         # IMPORTANT - it is locked to a fixed IP address on kucoin, - need to make IP adress fixed.
         accounts = kucoin_class.client.get_accounts()
-        print(kucoin_class.get_account(coin="XRP", accounts=accounts))
+        print(kucoin_class.get_account(coin="USDT", accounts=accounts))
 
