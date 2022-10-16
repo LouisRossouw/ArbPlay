@@ -105,19 +105,25 @@ class Algo_play():
 
 
 
-    def wait_for_funds_VALR(self, coin):
+    def wait_for_funds_VALR(self, coins):
         """ waits in a while loop until funds arive in the coins account. - VALR """
+
+        acc_name = self.SETTINGS.valr_arbitrage_acc_name
+        ID = self.valr.get_account_ID(acc_label=acc_name)
 
         self.coin_account_value = False
         while self.coin_account_value != True:
             sleep(2)
-            Valr.get_account()
-            coin_account = ""
-            if coin_account != None:
-                if float(coin_account["balance"]) >= 50:
-                    self.coin_account_value = True
-                    if self.coin_account_value == True:
-                        break
+
+            bal = self.valr.get_balances(acc_ID=ID)
+            local_coin_wallet = self.valr.parse_balances(balances=bal, coin=coins)
+
+            print("Checking Funds. - ", local_coin_wallet, coins)
+
+            if float(local_coin_wallet) >= float(50):
+                self.coin_account_value = True
+                if self.coin_account_value == True:
+                    break
 
         return True
 
@@ -241,13 +247,14 @@ if __name__ == "__main__":
 
     RUN = True
     SIGNAL = False
-    ANALYSE = True
+    ANALYSE = False
     COMPARE = False
     EXECUTE_TRADE = False
     PRINT_STATEMENT = False
     CONVERT_USDC_TO_ZAR = False
     WAIT_FOR_FUNDS_KUCOIN = False
     CONVERT_USDC_TO_ZAR = False
+    WAIT_FOR_FUNDS_VALR = False
 
     TRADEPAIR_ALLOWED =  ["ETH", "BTC", "XRPZ", "BNB", "SOL", "AVAX", "SHIB"]
     VALR_COINPAIR = ["ETHZAR", "BTCZAR", "XRPZAR", "BNBZAR", "SOLZAR", "AVAXZAR", "SHIBZAR"]
@@ -280,4 +287,5 @@ if __name__ == "__main__":
         kucoin_data = algo_play.kucoin.return_coinPair_group(coinpair_group=KUCOIN_COINPAIR)
         algo_play.compare(algo_play.valr_data[0], algo_play.kucoin_data)
 
-
+    if WAIT_FOR_FUNDS_VALR == True:
+        print(algo_play.wait_for_funds_VALR(coins="XRP"))
