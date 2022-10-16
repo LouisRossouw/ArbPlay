@@ -16,3 +16,4 @@ class Settings():
 
 
         # Valr
+        self.valr_arbitrage_acc_name = "BOTARB"
