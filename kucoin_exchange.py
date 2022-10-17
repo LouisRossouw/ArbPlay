@@ -23,6 +23,16 @@ class Kucoin():
 
 
 
+    def get_fiat_price_for_coin(self, fiat):
+        """ Return the value of the coin in any fiat, perfect to find ZAR value on Kucoin. """
+
+        data = self.client.get_fiat_prices(base=fiat)
+        # value = data[coin]
+        return data
+
+
+
+
     def return_coinPair_group(self, coinpair_group):
         """ returns a dict for inputed coinpair group, requires a list input. """
 
@@ -116,9 +126,8 @@ if __name__ == "__main__":
     RETURN_COINPAIR_DATA = False
     RETURN_COINPAIR_GROUP = False
     RETURN_ACCOUNT = False
-    GET_ACCOUNT = True
-
-
+    GET_ACCOUNT = False
+    GET_FIAT_PRICE_FOR_COIN = True
 
     if RETURN_COINPAIR_DATA == True:
         market_data = kucoin_class.client.get_ticker()["ticker"]
@@ -134,4 +143,7 @@ if __name__ == "__main__":
         # IMPORTANT - it is locked to a fixed IP address on kucoin, - need to make IP adress fixed.
         accounts = kucoin_class.client.get_accounts()
         print(kucoin_class.get_account(coin="USDT", accounts=accounts))
+
+    if GET_FIAT_PRICE_FOR_COIN == True:
+        print(kucoin_class.get_fiat_price_for_coin(fiat="ZAR"))
 
