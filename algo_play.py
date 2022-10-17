@@ -95,8 +95,6 @@ class Algo_play():
             pass
 
 
-
-
         # 5. Buy XRP, transfer XRP to international wallet.
 
         # 6. execute market sell order if XRP - usdc, if value == the same as bought price.
@@ -126,6 +124,7 @@ class Algo_play():
                     break
 
         return True
+
 
 
 
@@ -170,6 +169,7 @@ class Algo_play():
         """ Compares the price difference betweem local and international. """
 
         data = {}
+        kucoin_fiat_prices = self.kucoin.get_fiat_price_for_coin(fiat="ZAR")
 
         # i can buy at kucoin int_ask and sell at valr loc_bid
         for i in range(len(exchange_local)):
@@ -181,12 +181,11 @@ class Algo_play():
             int_currencyPair = exchange_international[i]["symbol"]
             int_ask_usdc = exchange_international[i]["sell"]
             int_bid_usdc = exchange_international[i]["buy"]
-            converted = self.convert_USDC_to_ZAR(int_ask_usdc, int_bid_usdc)
 
-            int_ask = converted[0]
-            int_bid = converted[1]
+            coin = int_currencyPair.split("-")[0]
+            int_coin_zar = kucoin_fiat_prices[coin]
 
-            return_analyse = self.analyse(loc_bid, int_ask, 
+            return_analyse = self.analyse(loc_bid, int_coin_zar, 
                         loc_currencyPair, int_currencyPair)
 
             data[loc_currencyPair] = return_analyse
@@ -196,31 +195,13 @@ class Algo_play():
 
 
 
-    def convert_USDC_to_ZAR(self, int_ask, int_bid):
-        """ Converts to rands """
-
-        ZAR_ask = self.valr_data[1]["askPrice"]
-        ZAR_bid = self.valr_data[1]["bidPrice"]
-
-        ZAR_ask_conversion = (float(int_ask) * float(self.ZAR))
-        ZAR_bid_conversion = (float(int_bid) * float(ZAR_ask))
-
-        # print("buy for ", int_ask, " x ", ZAR_ask, " = ",ZAR_ask_conversion)
-        # print("sell for ", int_bid, " x ", ZAR_ask, " = ",ZAR_bid_conversion)
-
-        return ZAR_ask_conversion, ZAR_bid_conversion
-
-
-
-
-
-    def analyse(self, loc_bid, int_ask, loc_currencyPair, int_currencyPair):
+    def analyse(self, loc_bid, int_coin_zar, loc_currencyPair, int_currencyPair):
         """ Check the spread if its large enough to let an execution buy and sell. """
 
-        percent_difference = round(utils.get_percentage_difference(loc_bid, int_ask), 2)
+        percent_difference = round(utils.get_percentage_difference(loc_bid, int_coin_zar), 2)
         percent_increase = round(utils.percent_increase(percent_difference, self.SETTINGS.play_money), 3)
 
-        print(loc_currencyPair, " |  R "+str(percent_increase), " | "+str(percent_difference) + "%", " | locZAR R"+ str(self.valr_data[1]["bidPrice"]), " | IntZAR R"+str(round(self.ZAR, 2)))
+        print(loc_currencyPair, " |  R "+str(percent_increase), " | "+str(percent_difference) + "%", " | Valr price R"+ str(loc_bid), " | Kucoin price R"+str(round(float(int_coin_zar), 2)))
         if percent_difference >= 3:
             print(loc_currencyPair, " |  R "+str(percent_increase), " | "+str(percent_difference) + "%", "<<< **************** ")
 
@@ -251,9 +232,7 @@ if __name__ == "__main__":
     COMPARE = False
     EXECUTE_TRADE = False
     PRINT_STATEMENT = False
-    CONVERT_USDC_TO_ZAR = False
     WAIT_FOR_FUNDS_KUCOIN = False
-    CONVERT_USDC_TO_ZAR = False
     WAIT_FOR_FUNDS_VALR = False
 
     TRADEPAIR_ALLOWED =  ["ETH", "BTC", "XRPZ", "BNB", "SOL", "AVAX", "SHIB"]
@@ -265,9 +244,6 @@ if __name__ == "__main__":
 
     if EXECUTE_TRADE == True:
         algo_play.execute_trade(coin="XRP")
-
-    if CONVERT_USDC_TO_ZAR == True:
-        print(algo_play.convert_USDC_to_ZAR(15, 18))
 
     if WAIT_FOR_FUNDS_KUCOIN == True:
         print(algo_play.wait_for_funds_KUCOIN(coin="XRP"))
