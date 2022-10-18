@@ -8,7 +8,7 @@ class Settings():
 
         # General
         self.Title = "ArbPlay"
-        self.play_money = 10000
+        self.play_money = 100000
         self.print_statements = True
 
         # Kucoin
@@ -18,3 +18,8 @@ class Settings():
 
         # Valr
         self.valr_arbitrage_acc_name = "BOTARB"
+
+
+
+        # Prices valuation
+        self.percent_trigger = 1.5
