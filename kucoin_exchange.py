@@ -20,18 +20,27 @@ class Kucoin():
         # or connect to Sandbox
         # client = Client(api_key, api_secret, api_passphrase, sandbox=True)
 
-        # self.client.create_deposit_address()
-        #print(self.client.get_deposit_address(currency="ETH"))
-        # test = print(self.client.get_withdrawals(currency="ETH"))
-        # test = print(self.client.get_withdrawal_quotas(currency="XRP")) # = (0.5 XRP) x Rands = value in Rands.
-        # print(self.client.create_withdrawal(currency="XRP", amount=5, address="valr wallet address"))
-        # print(self.client.create_market_order())
+
+
+
+
+    def get_withdrawal_quotas(self, coin):
+        """ Retrieves the cost of transfer for the specific coin. (0.5 XRP) x Rands = value in Rands. """
+        quote = self.client.get_withdrawal_quotas(currency=coin)
+        return quote
+
+
+
+    def get_deposit_address(self, coin):
+        """ Retrieves the wallet address for a specific coin. (might need to create one first)"""
+        address = self.client.get_deposit_address(currency=coin)
+        return address
+
+
 
     def get_fiat_price_for_coin(self, fiat):
         """ Return the value of the coin in any fiat, perfect to find ZAR value on Kucoin. """
-
         data = self.client.get_fiat_prices(base=fiat)
-        # value = data[coin]
         return data
 
 
@@ -63,15 +72,6 @@ class Kucoin():
 
         return coin_data
 
-
-
-
-    def check_USDC_amount(self):
-        """ Returns the amount of USDC in account. """
-
-
-        pass
-    
 
 
 
@@ -108,22 +108,37 @@ class Kucoin():
 
 
 
-    def buy_coin(self, coin, amount):
+
+    def buy_coin(self, coin_pair, amount_in_USDT):
         """ Performs a market buy function. """
 
         allow_place_order = self.SETTINGS.execute_order
 
         if allow_place_order == True:
-            self.client.create_market_order() # buy coin with usdc
+                                        # 'AFK-USDT'
+            self.client.create_market_order(coin_pair, "buy", funds=amount_in_USDT)
         elif allow_place_order == False:
             print("** placing orders are dissabled in the Settings.py file. ** ")
 
 
 
 
+    def sell_coin(self, coin_pair, amount_in_coins):
+        """ Performs a market buy function. """
+
+        allow_place_order = self.SETTINGS.execute_order
+
+        if allow_place_order == True:
+                                        # 'AFK-USDT'
+            self.client.create_market_order(coin_pair, "sell", size=amount_in_coins)
+        elif allow_place_order == False:
+            print("** placing orders are dissabled in the Settings.py file. ** ")
+
+
+
 
     def withdrawal_to_address(self, coin, amount_of_coin, wallet_address):
-        """ Performs a market buy function. """
+        """ Withdraws currency and transfers it to the new address. """
 
         allow_withdraws = self.SETTINGS.execute_withdrawels
 
@@ -146,8 +161,9 @@ if __name__ == "__main__":
     RETURN_ACCOUNT = False
     GET_ACCOUNT = False
     GET_FIAT_PRICE_FOR_COIN = False
-    WITHDRAWEL_TO_ADDRESS = False
-    BUY_COIN = True
+    WITHDRAWEL_TO_ADDRESS = True
+    SELL_COIN = False
+    BUY_COIN = False
 
 
     if RETURN_COINPAIR_DATA == True:
@@ -158,7 +174,7 @@ if __name__ == "__main__":
         print(kucoin_class.return_coinPair_group(coinpair_group=COINPAIR_GRP))
 
     if RETURN_ACCOUNT == True:
-        print(kucoin_class.return_account(coin="USDC"))
+        print(kucoin_class.return_account(coin="AFK"))
 
     if GET_ACCOUNT == True:
         # IMPORTANT - it is locked to a fixed IP address on kucoin, - need to make IP adress fixed.
@@ -166,11 +182,13 @@ if __name__ == "__main__":
         print(kucoin_class.get_account(coin="USDT", accounts=accounts))
 
     if GET_FIAT_PRICE_FOR_COIN == True:
-        print(kucoin_class.get_fiat_price_for_coin(fiat="ZAR"))
+        print(kucoin_class.get_fiat_price_for_coin(fiat="ZAR")["AFK"])
 
     if WITHDRAWEL_TO_ADDRESS == True:
-        kucoin_class.withdrawal_to_address(coin="XRP", amount_of_coin=5, wallet_address="123456")
+        kucoin_class.withdrawal_to_address(coin="SHIB", amount_of_coin=5100, wallet_address="123456")
+
+    if SELL_COIN == True:
+        kucoin_class.sell_coin(coin_pair="AFK-USDT", amount_in_USDT="10")
 
     if BUY_COIN == True:
-        kucoin_class.buy_coin(coin="XRP", amount=5)
-
+        kucoin_class.buy_coin(coin_pair="SHIB-USDT", amount_in_USDT=10)
