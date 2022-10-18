@@ -12,7 +12,8 @@ class Settings():
         self.print_statements = True
 
         # Kucoin
-
+        self.execute_withdrawels = False # if True, withdraw / transfer coin to another wallet address.
+        self.execute_order = False # If True, then buy a coin using usdc
 
 
         # Valr
