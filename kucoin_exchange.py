@@ -20,8 +20,12 @@ class Kucoin():
         # or connect to Sandbox
         # client = Client(api_key, api_secret, api_passphrase, sandbox=True)
 
-
-
+        # self.client.create_deposit_address()
+        #print(self.client.get_deposit_address(currency="ETH"))
+        # test = print(self.client.get_withdrawals(currency="ETH"))
+        # test = print(self.client.get_withdrawal_quotas(currency="XRP")) # = (0.5 XRP) x Rands = value in Rands.
+        # print(self.client.create_withdrawal(currency="XRP", amount=5, address="valr wallet address"))
+        # print(self.client.create_market_order())
 
     def get_fiat_price_for_coin(self, fiat):
         """ Return the value of the coin in any fiat, perfect to find ZAR value on Kucoin. """
@@ -106,13 +110,27 @@ class Kucoin():
 
     def buy_coin(self, coin, amount):
         """ Performs a market buy function. """
-        pass
+
+        allow_place_order = self.SETTINGS.execute_order
+
+        if allow_place_order == True:
+            self.client.create_market_order() # buy coin with usdc
+        elif allow_place_order == False:
+            print("** placing orders are dissabled in the Settings.py file. ** ")
 
 
 
-    def transfer_coin_to_address(self, coin, amount, address):
+
+
+    def withdrawal_to_address(self, coin, amount_of_coin, wallet_address):
         """ Performs a market buy function. """
-        pass
+
+        allow_withdraws = self.SETTINGS.execute_withdrawels
+
+        if allow_withdraws == True:
+            self.client.create_withdrawal(currency=coin, amount=amount_of_coin, address=wallet_address, remark="Arbitrage_to_Valr",)
+        else:
+            print("** Withdrawels are dissabled in the Settings.py file. ** ")
 
 
 
@@ -127,7 +145,10 @@ if __name__ == "__main__":
     RETURN_COINPAIR_GROUP = False
     RETURN_ACCOUNT = False
     GET_ACCOUNT = False
-    GET_FIAT_PRICE_FOR_COIN = True
+    GET_FIAT_PRICE_FOR_COIN = False
+    WITHDRAWEL_TO_ADDRESS = False
+    BUY_COIN = True
+
 
     if RETURN_COINPAIR_DATA == True:
         market_data = kucoin_class.client.get_ticker()["ticker"]
@@ -146,4 +167,10 @@ if __name__ == "__main__":
 
     if GET_FIAT_PRICE_FOR_COIN == True:
         print(kucoin_class.get_fiat_price_for_coin(fiat="ZAR"))
+
+    if WITHDRAWEL_TO_ADDRESS == True:
+        kucoin_class.withdrawal_to_address(coin="XRP", amount_of_coin=5, wallet_address="123456")
+
+    if BUY_COIN == True:
+        kucoin_class.buy_coin(coin="XRP", amount=5)
 
