@@ -1,11 +1,11 @@
-from time import sleep
+from tkinter import EXCEPTION
 import utils
+from time import sleep
 from settings import Settings
 
 from kucoin_exchange import Kucoin
 from valr_exchange import Valr
 
-from forex_python.converter import CurrencyRates
 
 class Algo_play():
     """ A class to store all the settings for algo play. """
@@ -18,7 +18,7 @@ class Algo_play():
         self.valr = Valr()
         self.SETTINGS = Settings()
 
-        self.TRADEPAIR_ALLOWED =  ["XRP", "BNB", "SOL", "AVAX", "SHIB"]
+        self.TRADEPAIR_ALLOWED =  ["XRP", "SOL", "AVAX"]
 
         # Compatible trading pairs.
         self.VALR_COINPAIR = ["ETHZAR", "BTCZAR", "XRPZAR", "BNBZAR", "SOLZAR", "AVAXZAR", "SHIBZAR"]
@@ -48,65 +48,71 @@ class Algo_play():
     def execute_trade(self, coin, percent_difference, percent_increase):
         """ Run the execution of the trade between the exchanges. """
 
+        self.trade_account = self.SETTINGS.trade_account
+
         enough_usdc = None
-        self.coin_account_value = None
+        self.is_withdrawn = False
 
         # Get all Kucoin Accounts
         all_accounts = self.kucoin.client.get_accounts()
 
-        # 0. check if coin has already been bought.
-        coin_account = self.kucoin.get_account(coin=coin, accounts=all_accounts)
-        if coin_account != None:
-            if float(coin_account["balance"]) >= 10000: # NEED TO FIX THIS, IT CURRENTLY IS BASED ON BASE COIN CURRENCY AND NOT USDT
-                print("enough coins")
-                self.coin_account_value = True
 
         # 1. check if enough USDC in account.
-        USDT_account = self.kucoin.get_account(coin="USDT", accounts=all_accounts)
-        USDT_balance = USDT_account["balance"]
+        USDT_account = self.kucoin.get_account(coin="USDT", accounts=all_accounts, account_type="trade")
+        USDT_balance = USDT_account["balance"].split('.')[0]
         if USDT_account != None:
-            if float(USDT_balance) >= 40:
+            if float(USDT_balance) >= 50:
                 enough_usdc = True
 
         coin_pairs = coin + '-USDT'
-        print("\n*** Arbitrage oppertunity - ", coin, str(percent_difference) + "%", " | R"+ str(percent_increase), " | enough USDC: " + str(bool(enough_usdc)), " | Existing coins: " + str(bool(self.coin_account_value)))
+        print("\n*** Arbitrage oppertunity - ", coin, str(percent_difference) + "%", " | R"+ str(percent_increase), " | enough USDC: " + str(bool(enough_usdc)), " | USDT: : " + str(USDT_balance))
 
-
-        # 2. execute a buy market order on international exchange,
-        if self.coin_account_value != None:
-            # 2.1. execute transfer to local wallet.
-            print("KUCOIN - enough coins " ,"Transfering ", coin, coin_account["balance"])
-            coin_address = self.valr.return_account_wallet_address(coin=coin, subaccount_id="main", account_type="main")
-            self.kucoin.withdrawal_to_address(coin=coin, amount_of_coin=coin_account["balance"], wallet_address=coin_address)
-
-
-        elif self.coin_account_value == None:
-            # 2.1. BUY WITH USDC, if no USDC available, the pass
+        if self.SETTINGS.execute_order == True:
+            # 2.1. BUY WITH USDC, if no USDC available, then pass
             if enough_usdc == True:
-                self.kucoin.buy_coin(coin_pair=coin_pairs, amount_in_USDT=float(USDT_balance) - 1)
+                self.kucoin.buy_coin(coin_pair=coin_pairs, amount_in_USDT=USDT_balance)
 
                 # 2.2. while loop until funds reflect in the coins address,
                 KUCOIN_Funds_ready = self.wait_for_funds_KUCOIN(coin)
 
                 # 2.3. execute transfer to local wallet.
                 if KUCOIN_Funds_ready == True:
-                    accounts = self.kucoin.client.get_accounts()
-                    coin_account = self.kucoin.get_account(coin=coin, accounts=accounts)
+                    try:
+                        accounts = self.kucoin.client.get_accounts()
+                        coin_account = self.kucoin.get_account(coin=coin, accounts=accounts, account_type="trade")["balance"]
 
-                    coin_address = self.valr.return_account_wallet_address(coin=coin, subaccount_id="main", account_type="main")
-                    self.kucoin.withdrawal_to_address(coin=coin, amount_of_coin=coin_account["balance"], wallet_address=coin_address) # Transfer to valr exchange.
+                        self.kucoin.inner_transfer(coin=coin, from_account="trade", to_account="main", amount_coins=coin_account)
+                        sleep(2)
 
+
+
+                        valr_coin_info = self.valr.return_account_wallet_address(coin=coin, subaccount_id="main", account_type="main")
+
+                        try:
+                            valr_memo_TAG = valr_coin_info["paymentReference"]
+                        except EXCEPTION as e:
+                            valr_memo_TAG = ""
+                            
+                        valr_coin_address = valr_coin_info["address"]
+
+
+                        result = self.kucoin.withdrawal_to_address(coin=coin, amount_of_coin=coin_account, wallet_address=valr_coin_address, memo_tag=valr_memo_TAG) # Transfer to valr exchange.
+                        print("withdrawn ", result)
+                        self.is_withdrawn = True
+                    except Exception as e:
+                        print("Withdraw failed ", print(e))
 
 
         # 3. Check if crypto has arrived on local wallet.
-        if self.coin_account_value != None:
+        if self.is_withdrawn != False:
+            sleep(5)
             VALR_Funds_readyself = self.wait_for_funds_VALR(coin)
         else:
             VALR_Funds_readyself = False
 
         # 4. If True - execute a sell market order on local exchange
         if VALR_Funds_readyself == True:
-            pass
+            print("YAAAY!")
 
 
         # 5. Buy XRP, transfer XRP to international wallet.
@@ -151,7 +157,7 @@ class Algo_play():
             sleep(2)
             # Get all Kucoin Accounts
             all_accounts = self.kucoin.client.get_accounts()
-            coin_account = self.kucoin.get_account(coin=coin, accounts=all_accounts)
+            coin_account = self.kucoin.get_account(coin=coin, accounts=all_accounts, account_type="trade")
             print("kucoin - Checking Funds. - ", coin_account, coin)
             if coin_account != None:
                 if float(coin_account["balance"]) >= 50:
@@ -169,16 +175,24 @@ class Algo_play():
 
         percent_trigger = self.SETTINGS.percent_trigger # the value that will trigger as an oppertunity, 4% price increase would trigger an abritrage for example.
 
-        for data in return_analyse:
-            for allowed in self.TRADEPAIR_ALLOWED:
-                if allowed in data:
+        force_signal = self.SETTINGS.force_signal[0]
+        force_coin = self.SETTINGS.force_signal[1]
 
-                    percent_difference = return_analyse[data][0]
-                    growth_potential = return_analyse[data][1]            
+        # Force a signal execution to run tests.
+        if force_signal == True:
+            self.execute_trade(force_coin, " // ", " // ")
 
-                    # if the arbitrage spread is greater than. then execute the trade.
-                    if percent_difference >= percent_trigger:
-                        self.execute_trade(allowed, percent_difference, growth_potential)
+        else:
+            for data in return_analyse:
+                for allowed in self.TRADEPAIR_ALLOWED:
+                    if allowed in data:
+
+                        percent_difference = return_analyse[data][0]
+                        growth_potential = return_analyse[data][1]            
+
+                        # if the arbitrage spread is greater than. then execute the trade.
+                        if percent_difference >= percent_trigger:
+                            self.execute_trade(allowed, percent_difference, growth_potential)
 
 
 
@@ -281,3 +295,6 @@ if __name__ == "__main__":
 
     if WAIT_FOR_FUNDS_VALR == True:
         print(algo_play.wait_for_funds_VALR(coins="XRP"))
+
+
+    # print(algo_play.SETTINGS.force_signal[0])
