@@ -57,7 +57,7 @@ class Algo_play():
         # 0. check if coin has already been bought.
         coin_account = self.kucoin.get_account(coin=coin, accounts=all_accounts)
         if coin_account != None:
-            if float(coin_account["balance"]) >= 10000000: # NEED TO FIX THIS, IT CURRENTLY IS BASED ON BASE COIN CURRENCY AND NOT USDT
+            if float(coin_account["balance"]) >= 10000: # NEED TO FIX THIS, IT CURRENTLY IS BASED ON BASE COIN CURRENCY AND NOT USDT
                 print("enough coins")
                 self.coin_account_value = True
 
@@ -75,7 +75,9 @@ class Algo_play():
         # 2. execute a buy market order on international exchange,
         if self.coin_account_value != None:
             # 2.1. execute transfer to local wallet.
-            self.kucoin.transfer_coin_to_address(coin=coin, amount=10, address="1234")
+            print("KUCOIN - enough coins " ,"Transfering ", coin, coin_account["balance"])
+            coin_address = self.valr.return_account_wallet_address(coin=coin, subaccount_id="main", account_type="main")
+            self.kucoin.withdrawal_to_address(coin=coin, amount_of_coin=coin_account["balance"], wallet_address=coin_address)
 
 
         elif self.coin_account_value == None:
@@ -88,7 +90,11 @@ class Algo_play():
 
                 # 2.3. execute transfer to local wallet.
                 if KUCOIN_Funds_ready == True:
-                    self.kucoin.transfer_coin_to_address(coin=coin, amount=10, address="1234")
+                    accounts = self.kucoin.client.get_accounts()
+                    coin_account = self.kucoin.get_account(coin=coin, accounts=accounts)
+
+                    coin_address = self.valr.return_account_wallet_address(coin=coin, subaccount_id="main", account_type="main")
+                    self.kucoin.withdrawal_to_address(coin=coin, amount_of_coin=coin_account["balance"], wallet_address=coin_address) # Transfer to valr exchange.
 
 
 
@@ -121,7 +127,7 @@ class Algo_play():
         while self.coin_account_value != True:
             sleep(2)
 
-            bal = self.valr.get_balances(acc_ID=ID)
+            bal = self.valr.get_balances(acc_ID=ID, account_type="main")
             local_coin_wallet = self.valr.parse_balances(balances=bal, coin=coins)
 
             print("VALR - Checking Funds. - ", local_coin_wallet, coins)
