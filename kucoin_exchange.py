@@ -159,9 +159,9 @@ if __name__ == "__main__":
     RETURN_COINPAIR_DATA = False
     RETURN_COINPAIR_GROUP = False
     RETURN_ACCOUNT = False
-    GET_ACCOUNT = False
+    GET_ACCOUNT = True
     GET_FIAT_PRICE_FOR_COIN = False
-    WITHDRAWEL_TO_ADDRESS = True
+    WITHDRAWEL_TO_ADDRESS = False
     SELL_COIN = False
     BUY_COIN = False
 
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     if GET_ACCOUNT == True:
         # IMPORTANT - it is locked to a fixed IP address on kucoin, - need to make IP adress fixed.
         accounts = kucoin_class.client.get_accounts()
-        print(kucoin_class.get_account(coin="USDT", accounts=accounts))
+        print(kucoin_class.get_account(coin="SHIB", accounts=accounts))
 
     if GET_FIAT_PRICE_FOR_COIN == True:
         print(kucoin_class.get_fiat_price_for_coin(fiat="ZAR")["AFK"])
