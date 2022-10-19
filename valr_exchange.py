@@ -1,3 +1,4 @@
+from distutils import ccompiler
 import os
 from settings import Settings
 
@@ -17,6 +18,22 @@ class Valr():
         self.VALR_KEY = os.getenv('VALR_API_KEY')
         self.VALR_SECRET_KEY = os.getenv('VALR_API_KEY_SECRET')
         self.Valr_client = Client(api_key=self.VALR_KEY, api_secret=self.VALR_SECRET_KEY)
+
+  
+
+
+
+
+    def return_account_wallet_address(self, coin, subaccount_id, account_type):
+        """ returns the wallet address for the specific coin, 
+        if a subaccount ID is not given, it will use the default address. """
+
+        if account_type == "sub":
+            address = self.Valr_client.get_deposit_address(currency_code=coin, subaccount_id=subaccount_id)
+        if account_type == "main":
+            address = self.Valr_client.get_deposit_address(currency_code=coin)
+
+        return address
 
 
 
@@ -92,10 +109,14 @@ class Valr():
 
 
 
-    def get_balances(self, acc_ID):
+    def get_balances(self, acc_ID, account_type):
         """ Returns Balances for the specific account. """
 
-        balances = self.Valr_client.get_balances(subaccount_id=str(acc_ID))
+        if account_type == "sub":
+            balances = self.Valr_client.get_balances(subaccount_id=str(acc_ID))
+        if account_type == "main":
+            balances = self.Valr_client.get_balances()    
+
         return balances
 
 
@@ -155,6 +176,7 @@ if __name__ == "__main__":
     RETURN_COINPAIR_GROUP = False
     GET_ACCOUNT_ID = False
     GET_BALANCES = True
+    RETURN_ACCOUNT_WALLET_ADDRESS = False
 
     if GET_VALR_MARKET == True:
         print(valr_c.get_valr_market())
@@ -173,6 +195,9 @@ if __name__ == "__main__":
 
     if GET_BALANCES == True:
         ID = valr_c.get_account_ID(acc_label=acc_name)
-        bal = valr_c.get_balances(acc_ID=ID)
+        bal = valr_c.get_balances(acc_ID=ID, account_type="main")
         print(valr_c.parse_balances(balances=bal, coin="XRP"))
 
+    if RETURN_ACCOUNT_WALLET_ADDRESS == True:
+        sub_ID = valr_c.get_account_ID(acc_label=acc_name)
+        print(valr_c.return_account_wallet_address(coin="SHIB", subaccount_id=sub_ID, account_type="main"))
