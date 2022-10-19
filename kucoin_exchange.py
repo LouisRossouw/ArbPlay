@@ -22,6 +22,10 @@ class Kucoin():
 
 
 
+    def inner_transfer(self, coin, from_account, to_account, amount_coins):
+        """ Transfers coins from trade account to main account or vice versa. """
+        self.client.create_inner_transfer(currency=coin, from_type=from_account, to_type=to_account, amount=amount_coins)
+
 
 
     def get_withdrawal_quotas(self, coin):
@@ -86,7 +90,7 @@ class Kucoin():
 
 
 
-    def get_account(self, coin, accounts):
+    def get_account(self, coin, accounts, account_type):
         """ Returns existing accounts on Kucoin.
         # IMPORTANT - it is locked to a fixed IP address on kucoin, - need to make IP adress fixed.
         """
@@ -99,7 +103,7 @@ class Kucoin():
             balance = (accounts[account]["balance"])
 
             if coin == currency_coin:
-                if type == "trade":
+                if type == account_type:
                     data = {"currency_coin":currency_coin, "type":type, "balance":balance}
             else:
                 pass
@@ -137,13 +141,14 @@ class Kucoin():
 
 
 
-    def withdrawal_to_address(self, coin, amount_of_coin, wallet_address):
+    def withdrawal_to_address(self, coin, amount_of_coin, wallet_address, memo_tag):
         """ Withdraws currency and transfers it to the new address. """
 
         allow_withdraws = self.SETTINGS.execute_withdrawels
+        total = str(amount_of_coin).split(".")[0] # remove decimals.
 
         if allow_withdraws == True:
-            self.client.create_withdrawal(currency=coin, amount=amount_of_coin, address=wallet_address, remark="Arbitrage_to_Valr",)
+            self.client.create_withdrawal(currency=coin, amount=total, address=wallet_address, memo=memo_tag, remark="Test")
         else:
             print("** Withdrawels are dissabled in the Settings.py file. ** ")
 
@@ -159,11 +164,13 @@ if __name__ == "__main__":
     RETURN_COINPAIR_DATA = False
     RETURN_COINPAIR_GROUP = False
     RETURN_ACCOUNT = False
-    GET_ACCOUNT = True
+    GET_ACCOUNT = False
     GET_FIAT_PRICE_FOR_COIN = False
-    WITHDRAWEL_TO_ADDRESS = False
+    WITHDRAWEL_TO_ADDRESS = True
     SELL_COIN = False
     BUY_COIN = False
+    GET_WITHDRAWAL_QUOTES = False
+    INNER_TRANSFER = False
 
 
     if RETURN_COINPAIR_DATA == True:
@@ -179,16 +186,40 @@ if __name__ == "__main__":
     if GET_ACCOUNT == True:
         # IMPORTANT - it is locked to a fixed IP address on kucoin, - need to make IP adress fixed.
         accounts = kucoin_class.client.get_accounts()
-        print(kucoin_class.get_account(coin="SHIB", accounts=accounts))
+        print(kucoin_class.get_account(coin="SHIB", accounts=accounts, account_type="trade"))
 
     if GET_FIAT_PRICE_FOR_COIN == True:
         print(kucoin_class.get_fiat_price_for_coin(fiat="ZAR")["AFK"])
 
     if WITHDRAWEL_TO_ADDRESS == True:
-        kucoin_class.withdrawal_to_address(coin="SHIB", amount_of_coin=5100, wallet_address="123456")
+        XRP_ADDRESS = "rfrnxmLBiXHj38a2ZUDNzbks3y6yd3wJnV"
+        accounts = kucoin_class.client.get_accounts()
+        amount_available = kucoin_class.get_account(coin="XRP", accounts=accounts, account_type="main")["balance"]
+        print(XRP_ADDRESS, amount_available)
+        #kucoin_class.withdrawal_to_address(coin="USDT", amount_of_coin=amount_available, wallet_address=XRP_ADDRESS)
+
+        # SHIBA INU, +- 10 min to transfer @ 600000 SHIB / 120 zar - ouch.
+        # XRP +- less than 1min to transfer @ 0.5 XRP / 4.50 zar - good
+        # SOL +- 5 top 20 seconds transfer  @ 0.0100 / 5.40 Zar - good
+        # BNB +- 3 - 4 hours @ 0.01 / 49 zar - bad
+        # AVAX +- 5 seconds @ 0.1 / 3 ZAR - good - mght not be allowed to withdraw.
 
     if SELL_COIN == True:
         kucoin_class.sell_coin(coin_pair="AFK-USDT", amount_in_USDT="10")
 
     if BUY_COIN == True:
-        kucoin_class.buy_coin(coin_pair="SHIB-USDT", amount_in_USDT=10)
+        kucoin_class.buy_coin(coin_pair="XRP-USDT", amount_in_USDT=10)
+
+    if GET_WITHDRAWAL_QUOTES == True:
+        print(kucoin_class.get_withdrawal_quotas(coin="AVAX"))
+
+    if INNER_TRANSFER == True:
+
+        coin = "XRP"
+        from_acc = "main"
+        to_acc = "trade"
+
+        accounts = kucoin_class.client.get_accounts()
+        amount_available = kucoin_class.get_account(coin=coin, accounts=accounts, account_type=from_acc)["balance"]
+        kucoin_class.inner_transfer(coin=coin, from_account=from_acc, to_account=to_acc, amount_coins=amount_available)
+        print("transfering ", amount_available)
