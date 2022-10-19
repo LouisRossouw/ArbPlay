@@ -1,4 +1,3 @@
-from distutils import ccompiler
 import os
 from settings import Settings
 
@@ -175,8 +174,8 @@ if __name__ == "__main__":
     RETURN_COINPAIR_DATA = False
     RETURN_COINPAIR_GROUP = False
     GET_ACCOUNT_ID = False
-    GET_BALANCES = True
-    RETURN_ACCOUNT_WALLET_ADDRESS = False
+    GET_BALANCES = False
+    RETURN_ACCOUNT_WALLET_ADDRESS = True
 
     if GET_VALR_MARKET == True:
         print(valr_c.get_valr_market())
@@ -196,8 +195,8 @@ if __name__ == "__main__":
     if GET_BALANCES == True:
         ID = valr_c.get_account_ID(acc_label=acc_name)
         bal = valr_c.get_balances(acc_ID=ID, account_type="main")
-        print(valr_c.parse_balances(balances=bal, coin="XRP"))
+        print(valr_c.parse_balances(balances=bal, coin="SHIB"))
 
     if RETURN_ACCOUNT_WALLET_ADDRESS == True:
         sub_ID = valr_c.get_account_ID(acc_label=acc_name)
-        print(valr_c.return_account_wallet_address(coin="SHIB", subaccount_id=sub_ID, account_type="main"))
+        print(valr_c.return_account_wallet_address(coin="XRP", subaccount_id=sub_ID, account_type="main"))
