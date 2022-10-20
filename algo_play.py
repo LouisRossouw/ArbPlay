@@ -45,62 +45,108 @@ class Algo_play():
 
 
 
-    def execute_trade(self, coin, percent_difference, percent_increase):
-        """ Run the execution of the trade between the exchanges. """
-
-        self.trade_account = self.SETTINGS.trade_account
-
-        enough_usdc = None
-        self.is_withdrawn = False
+    def _check_USDC(self):
+        """ PT of: execute_trade 1. : Check if there is enough USDT for trade execution. """
 
         # Get all Kucoin Accounts
         all_accounts = self.kucoin.client.get_accounts()
 
-
         # 1. check if enough USDC in account.
-        USDT_account = self.kucoin.get_account(coin="USDT", accounts=all_accounts, account_type="trade")
+        USDT_account = self.kucoin.get_account(coin="USDT", 
+                                               accounts=all_accounts, 
+                                               account_type="trade")
+
         USDT_balance = USDT_account["balance"].split('.')[0]
         if USDT_account != None:
+
             if float(USDT_balance) >= 50:
                 enough_usdc = True
+            else:
+                enough_usdc = False
+
+        return enough_usdc, USDT_balance
+
+
+
+
+    def _buy_coins(self, coin, coin_pairs, USDT_balance):
+        """ PT of: execute_trade 2. : Buy order of specific coins. """
+
+        self.kucoin.buy_coin(coin_pair=coin_pairs, amount_in_USDT=USDT_balance)
+
+        # 2.2. while loop until funds reflect in the coins address,
+        KUCOIN_Funds_ready = self.wait_for_funds_KUCOIN(coin)
+
+        return KUCOIN_Funds_ready
+
+
+
+
+    def _execute_withdraw(self, coin):
+        """ PT of: execute_trade 2. : Execute Withdraw procedure. """
+
+        try:
+            accounts = self.kucoin.client.get_accounts()
+            coin_account = self.kucoin.get_account(coin=coin, 
+                                                   accounts=accounts, 
+                                                   account_type="trade")["balance"]
+
+            self.kucoin.inner_transfer(coin=coin, 
+                                       from_account="trade", 
+                                       to_account="main", 
+                                       amount_coins=coin_account)
+            sleep(2)
+            valr_coin_info = self.valr.return_account_wallet_address(coin=coin, 
+                                                                    subaccount_id="main", 
+                                                                    account_type="main")
+
+            # If there is no memo tag, then catch exception.
+            try:
+                valr_memo_TAG = valr_coin_info["paymentReference"]
+            except EXCEPTION as e:
+                valr_memo_TAG = ""
+                
+            valr_coin_address = valr_coin_info["address"]
+            result = self.kucoin.withdrawal_to_address(coin=coin, 
+                                                       amount_of_coin=coin_account, 
+                                                       wallet_address=valr_coin_address, 
+                                                       memo_tag=valr_memo_TAG)  # Transfer to valr exchange.
+            print("withdrawn ", result)
+            is_withdrawn = True
+
+        except Exception as e:
+
+            print("Withdraw failed ", print(e))
+            is_withdrawn = False
+
+        return is_withdrawn
+
+
+
+
+    def execute_trade(self, coin, percent_difference, percent_increase):
+        """ Run the execution of the trade between the exchanges. """
 
         coin_pairs = coin + '-USDT'
+        self.is_withdrawn = False
+
+        # 1. check if enough USDC in account.
+        enough_usdc = self._check_USDC()
+        USDT_balance = enough_usdc[1]
+
         print("\n*** Arbitrage oppertunity - ", coin, str(percent_difference) + "%", " | R"+ str(percent_increase), " | enough USDC: " + str(bool(enough_usdc)), " | USDT: : " + str(USDT_balance))
 
         if self.SETTINGS.execute_order == True:
-            # 2.1. BUY WITH USDC, if no USDC available, then pass
-            if enough_usdc == True:
-                self.kucoin.buy_coin(coin_pair=coin_pairs, amount_in_USDT=USDT_balance)
 
-                # 2.2. while loop until funds reflect in the coins address,
-                KUCOIN_Funds_ready = self.wait_for_funds_KUCOIN(coin)
+            # 2.1. BUY WITH USDC, if no USDC available, then pass
+            if enough_usdc[0] == True:
+
+                # 2.2 Buy coin and return True if in account.
+                KUCOIN_Funds_ready = self._buy_coins(coin, coin_pairs, USDT_balance)
 
                 # 2.3. execute transfer to local wallet.
                 if KUCOIN_Funds_ready == True:
-                    try:
-                        accounts = self.kucoin.client.get_accounts()
-                        coin_account = self.kucoin.get_account(coin=coin, accounts=accounts, account_type="trade")["balance"]
-
-                        self.kucoin.inner_transfer(coin=coin, from_account="trade", to_account="main", amount_coins=coin_account)
-                        sleep(2)
-
-
-
-                        valr_coin_info = self.valr.return_account_wallet_address(coin=coin, subaccount_id="main", account_type="main")
-
-                        try:
-                            valr_memo_TAG = valr_coin_info["paymentReference"]
-                        except EXCEPTION as e:
-                            valr_memo_TAG = ""
-                            
-                        valr_coin_address = valr_coin_info["address"]
-
-
-                        result = self.kucoin.withdrawal_to_address(coin=coin, amount_of_coin=coin_account, wallet_address=valr_coin_address, memo_tag=valr_memo_TAG) # Transfer to valr exchange.
-                        print("withdrawn ", result)
-                        self.is_withdrawn = True
-                    except Exception as e:
-                        print("Withdraw failed ", print(e))
+                    self.is_withdrawn = self._execute_withdraw(coin)
 
 
         # 3. Check if crypto has arrived on local wallet.
@@ -113,7 +159,6 @@ class Algo_play():
         # 4. If True - execute a sell market order on local exchange
         if VALR_Funds_readyself == True:
             print("YAAAY!")
-
 
         # 5. Buy XRP, transfer XRP to international wallet.
 
@@ -157,7 +202,10 @@ class Algo_play():
             sleep(2)
             # Get all Kucoin Accounts
             all_accounts = self.kucoin.client.get_accounts()
-            coin_account = self.kucoin.get_account(coin=coin, accounts=all_accounts, account_type="trade")
+            coin_account = self.kucoin.get_account(coin=coin, 
+                                                   accounts=all_accounts, 
+                                                   account_type="trade")
+
             print("kucoin - Checking Funds. - ", coin_account, coin)
             if coin_account != None:
                 if float(coin_account["balance"]) >= 50:
