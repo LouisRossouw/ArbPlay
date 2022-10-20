@@ -1,6 +1,7 @@
-from tkinter import EXCEPTION
 import utils
 from time import sleep
+
+from data import Data_log
 from settings import Settings
 
 from kucoin_exchange import Kucoin
@@ -17,6 +18,7 @@ class Algo_play():
         self.kucoin = Kucoin()
         self.valr = Valr()
         self.SETTINGS = Settings()
+        self.DATA_LOG = Data_log()
 
         self.TRADEPAIR_ALLOWED =  ["XRP", "SOL", "AVAX"]
 
@@ -27,13 +29,9 @@ class Algo_play():
 
 
 
-
-
     def run(self):
         """ Main trading algo happens here."""
 
-        # cr = CurrencyRates()
-        # self.ZAR = cr.get_rates("USD")["ZAR"]
         self.valr_data = self.valr.return_coinPair_group(coinpair_group=self.VALR_COINPAIR)
         kucoin_data = self.kucoin.return_coinPair_group(coinpair_group=self.KUCOIN_COINPAIR)
         
@@ -111,6 +109,10 @@ class Algo_play():
                                                        amount_of_coin=coin_account, 
                                                        wallet_address=valr_coin_address, 
                                                        memo_tag=valr_memo_TAG)  # Transfer to valr exchange.
+
+            self.DATA_LOG.set_kucoin_Coin(coin)
+            self.DATA_LOG.set_kucoin_amount(coin_account)
+
             print("withdrawn ", result)
             is_withdrawn = True
 
@@ -124,8 +126,40 @@ class Algo_play():
 
 
 
+    def execute_trade_reverse(self, coin, percent_difference, percent_increase):
+        """ Run the reverse - execution of the trade between the exchanges. VALR TO KUCOIN. """
+
+        # 6. execute market sell order if XRP - usdc, if value == the same as bought price.
+        # 7. wait for a new arbitrage oppertunity. - repeat
+
+        print("\n*** Reverse Arbitrage oppertunity - ", coin, str(percent_difference) + "%")
+
+        # # 1. check if enough USDC in account.
+        # enough_ZAR = "self._check_USDC()"
+
+        # # 2.1. BUY WITH ZAR, if no ZAR available, then pass
+        # if self.SETTINGS.execute_order == True:
+        #     if enough_ZAR == True:
+
+        #         # 2.2 Buy coin and return True if in account.
+        #         VALR_Funds_ready = "self._buy_coins(coin, coin_pairs, USDT_balance)"
+
+        #         # 2.3. execute transfer to local wallet.
+        #         if VALR_Funds_ready == True:
+        #             self.is_withdrawn = "self._execute_withdraw(coin)"
+
+        # # 3. KUCOIN - check for funds, execute sell order when they have arived.
+        # funds_arived_valr = "self._check_valr_funds(self.is_withdrawn, coin)"
+        # if funds_arived_valr == True:
+            
+        #     print("self.execute_sell_coins_valr(coin)")
+
+
+
+
+
     def execute_trade(self, coin, percent_difference, percent_increase):
-        """ Run the execution of the trade between the exchanges. """
+        """ Run the execution of the trade between the exchanges. KUCOIN TO VALR. """
 
         coin_pairs = coin + '-USDT'
         self.is_withdrawn = False
@@ -134,12 +168,13 @@ class Algo_play():
         enough_usdc = self._check_USDC()
         USDT_balance = enough_usdc[1]
 
-        print("\n*** Arbitrage oppertunity - ", coin, str(percent_difference) + "%", " | R"+ str(percent_increase), " | enough USDC: " + str(bool(enough_usdc)), " | USDT: : " + str(USDT_balance))
+        print("\n*** Arbitrage oppertunity - ", coin, str(percent_difference) + "%", " | R"+ str(percent_increase), " | enough USDT: " + str(enough_usdc[0]), " | USDT: : " + str(USDT_balance))
 
+        # 2.1. BUY WITH USDC, if no USDC available, then pass
         if self.SETTINGS.execute_order == True:
-
-            # 2.1. BUY WITH USDC, if no USDC available, then pass
             if enough_usdc[0] == True:
+
+                self.DATA_LOG.set_kucoin_USDT(USDT_balance)
 
                 # 2.2 Buy coin and return True if in account.
                 KUCOIN_Funds_ready = self._buy_coins(coin, coin_pairs, USDT_balance)
@@ -148,29 +183,47 @@ class Algo_play():
                 if KUCOIN_Funds_ready == True:
                     self.is_withdrawn = self._execute_withdraw(coin)
 
+        # 3. valr - check for funds, execute sell order when they have arived.
+        funds_arived_valr = self._check_valr_funds(self.is_withdrawn, coin)
+        if funds_arived_valr == True:
+            self.execute_sell_coins_valr(coin)
+
+
+
+
+    def _check_valr_funds(self, is_withdrawn, coin):
+        """ After Kucoin has withdrawn, wait and check that it has arrived in Valr. """
 
         # 3. Check if crypto has arrived on local wallet.
-        if self.is_withdrawn != False:
-            sleep(5)
+        if is_withdrawn != False:
             VALR_Funds_readyself = self.wait_for_funds_VALR(coin)
         else:
             VALR_Funds_readyself = False
 
         # 4. If True - execute a sell market order on local exchange
         if VALR_Funds_readyself == True:
-            print("YAAAY!")
+            print("Funds have arived on valr: ", coin)
 
-        # 5. Buy XRP, transfer XRP to international wallet.
+        return VALR_Funds_readyself
 
-        # 6. execute market sell order if XRP - usdc, if value == the same as bought price.
 
-        # 7. wait for a new arbitrage oppertunity. - repeat
+
+
+    def execute_sell_coins_valr(self, coin):
+        """ Execute a sell order on valr exchange after funs has arived in account from Kucoin."""
+        print("Valr - Selling: ", coin)
+
+
+        # Set system to reverse arbitrage - we need to get the funds back to Kucoin at the cheapest cost.
+        self.DATA_LOG.set_fund_position(position="reverse_arbitrage")
+
 
 
 
     def wait_for_funds_VALR(self, coins):
         """ waits in a while loop until funds arive in the coins account. - VALR """
 
+        sleep(10)
         acc_name = self.SETTINGS.valr_arbitrage_acc_name
         ID = self.valr.get_account_ID(acc_label=acc_name)
 
@@ -218,13 +271,17 @@ class Algo_play():
 
 
 
+
     def signal(self, return_analyse):
         """ Runs through the analyse data and if data is true, execute a True signal. """
 
-        percent_trigger = self.SETTINGS.percent_trigger # the value that will trigger as an oppertunity, 4% price increase would trigger an abritrage for example.
+        # the value that will trigger as an oppertunity, 4% price increase would trigger an abritrage for example.
+        percent_trigger = self.SETTINGS.percent_trigger
+        reverse_percent_trigger = self.SETTINGS.reverse_percent_trigger 
 
         force_signal = self.SETTINGS.force_signal[0]
         force_coin = self.SETTINGS.force_signal[1]
+        position = self.DATA_LOG.return_funds_position()
 
         # Force a signal execution to run tests.
         if force_signal == True:
@@ -238,9 +295,17 @@ class Algo_play():
                         percent_difference = return_analyse[data][0]
                         growth_potential = return_analyse[data][1]            
 
-                        # if the arbitrage spread is greater than. then execute the trade.
-                        if percent_difference >= percent_trigger:
-                            self.execute_trade(allowed, percent_difference, growth_potential)
+                        if position == "arbitrage":
+
+                            # if the arbitrage spread is greater than. then execute the trade from Kucoin to Valr.
+                            if percent_difference >= percent_trigger:
+                                self.execute_trade(allowed, percent_difference, growth_potential)
+
+                        elif position == "reverse_arbitrage":
+
+                            # if the reverse arbitrage spread is less than. then execute the trade from Valr to Kucoin.
+                            if percent_difference <= reverse_percent_trigger:
+                                self.execute_trade_reverse(allowed, percent_difference, growth_potential)
 
 
 
@@ -288,7 +353,6 @@ class Algo_play():
 
 
 
-
     def print_statement(self, loc_bid, int_coin_zar, loc_currencyPair, percent_difference, percent_increase):
         """ Prints out. """
 
@@ -312,6 +376,7 @@ if __name__ == "__main__":
     PRINT_STATEMENT = False
     WAIT_FOR_FUNDS_KUCOIN = False
     WAIT_FOR_FUNDS_VALR = False
+    EXECUTE_SELL_COINS_VALR = False
 
     TRADEPAIR_ALLOWED =  ["ETH", "BTC", "XRPZ", "BNB", "SOL", "AVAX", "SHIB"]
     VALR_COINPAIR = ["ETHZAR", "BTCZAR", "XRPZAR", "BNBZAR", "SOLZAR", "AVAXZAR", "SHIBZAR"]
@@ -344,5 +409,5 @@ if __name__ == "__main__":
     if WAIT_FOR_FUNDS_VALR == True:
         print(algo_play.wait_for_funds_VALR(coins="XRP"))
 
-
-    # print(algo_play.SETTINGS.force_signal[0])
+    if EXECUTE_SELL_COINS_VALR == True:
+        algo_play.execute_sell_coins_valr(coin="XRP")
