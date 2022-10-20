@@ -25,4 +25,4 @@ class Settings():
 
 
         # Prices valuation
-        self.percent_trigger = 1.8
+        self.percent_trigger = 0.5
