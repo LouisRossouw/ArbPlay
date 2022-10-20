@@ -1,3 +1,28 @@
+import os
+import json
+
+
+
+
+def write_to_json(json_path, data):
+    """ Create and write to json file """
+
+    with open(json_path, 'w') as f:
+        json.dump(data, f, indent=6)
+
+
+
+
+def read_json(json_path):
+    """ Reads json file """
+    with open(json_path) as f:
+        json_file = json.loads(f.read())
+
+    return (json_file)
+
+
+
+
 def get_percentage_difference(new_value, original_value):
     """ finds the percentage difference between new number and original """
     output_value = ((float(new_value) - float(original_value)) / float(original_value)) * 100
