@@ -188,6 +188,8 @@ class Algo_play():
         if funds_arived_valr == True:
             self.execute_sell_coins_valr(coin)
 
+            coin_quotes = self.kucoin.get_withdrawal_quotas(coin=coin)
+            self.DATA_LOG.set_kucoin_coin_fee(coin_fee=coin_quotes["withdrawMinFee"])
 
 
 
@@ -212,6 +214,16 @@ class Algo_play():
     def execute_sell_coins_valr(self, coin):
         """ Execute a sell order on valr exchange after funs has arived in account from Kucoin."""
         print("Valr - Selling: ", coin)
+
+        balances = self.valr.Valr_get_balances(type="main")
+        coin_balance = balances[coin]["available"]
+
+
+
+
+        print(balances[coin])
+
+
 
 
         # Set system to reverse arbitrage - we need to get the funds back to Kucoin at the cheapest cost.
@@ -316,6 +328,8 @@ class Algo_play():
         data = {}
         kucoin_fiat_prices = self.kucoin.get_fiat_price_for_coin(fiat="ZAR")
 
+        print(self.DATA_LOG.return_funds_position())
+
         # i can buy at kucoin int_ask and sell at valr loc_bid
         for i in range(len(exchange_local)):
 
@@ -368,7 +382,7 @@ if __name__ == "__main__":
 
     algo_play = Algo_play()
 
-    RUN = True
+    RUN = False
     SIGNAL = False
     ANALYSE = False
     COMPARE = False
@@ -376,7 +390,7 @@ if __name__ == "__main__":
     PRINT_STATEMENT = False
     WAIT_FOR_FUNDS_KUCOIN = False
     WAIT_FOR_FUNDS_VALR = False
-    EXECUTE_SELL_COINS_VALR = False
+    EXECUTE_SELL_COINS_VALR = True
 
     TRADEPAIR_ALLOWED =  ["ETH", "BTC", "XRPZ", "BNB", "SOL", "AVAX", "SHIB"]
     VALR_COINPAIR = ["ETHZAR", "BTCZAR", "XRPZAR", "BNBZAR", "SOLZAR", "AVAXZAR", "SHIBZAR"]
