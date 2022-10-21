@@ -134,27 +134,25 @@ class Valr():
 
 
 
-    def SELL_coin_to_ZAR(self, amount_in_coins, coin_pair, ID):
+    def SELL_coin_to_ZAR(self, amount_in_coins, coin_pair):
         """ Sell coin to Zar. """  
 
-        self.valr.post_market_order(
+        self.Valr_client.post_market_order(
                             pair=str(coin_pair),
                             side='SELL',
-                            base_amount= str(amount_in_coins),
-                            subaccount_id= str(ID)
+                            base_amount= str(amount_in_coins)
                             )
 
 
 
 
-    def BUY_ZAR_to_coin(self, amount_in_coins, coin_pair, ID):
+    def BUY_ZAR_to_coin(self, amount_in_coins, coin_pair):
         """ Buy Zar to coin. """
 
-        self.valr.post_market_order(
+        self.Valr_client.post_market_order(
                             pair=str(coin_pair),
                             side='BUY',
                             base_amount= str(amount_in_coins),
-                            subaccount_id= str(ID)
                             )
 
 
