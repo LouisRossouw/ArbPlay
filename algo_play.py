@@ -1,3 +1,4 @@
+from re import T
 import utils
 from time import sleep
 
@@ -132,12 +133,36 @@ class Algo_play():
         # 6. execute market sell order if XRP - usdc, if value == the same as bought price.
         # 7. wait for a new arbitrage oppertunity. - repeat
 
+        enough_ZAR = False
+        execute_valr_orders = self.SETTINGS.execute_order_valr
+
         print("\n*** Reverse Arbitrage oppertunity - ", coin, str(percent_difference) + "%")
 
-        # # 1. check if enough USDC in account.
-        # enough_ZAR = "self._check_USDC()"
-
+        # # 1. check if enough ZAR in account.
+        ZAR_balance = self.valr.Valr_get_balances(type="main")["ZAR"]["available"]
+        if float(ZAR_balance) >= float(1000):
+            enough_ZAR = True
+            
         # # 2.1. BUY WITH ZAR, if no ZAR available, then pass
+        if enough_ZAR == True:
+            if execute_valr_orders == True:
+                print("VALR - BUY ", coin, " R", ZAR_balance)
+                self.valr.BUY_ZAR_to_coin(amount_in_coins=ZAR_balance, coin_pair=coin+"ZAR")
+
+        enough_COIN = False
+        while enough_COIN != True:
+            COIN_balance = self.valr.Valr_get_balances(type="main")[coin]["available"]
+            print("VALR - Checking coin Balance ", COIN_balance, coin)
+            sleep(2)
+            if float(COIN_balance) >= float(1):
+                enough_COIN = True
+                break
+        
+        if enough_COIN == True:
+            print("VALR - WITHDRAW to Kucoin ", coin, COIN_balance)
+
+
+
         # if self.SETTINGS.execute_order == True:
         #     if enough_ZAR == True:
 
@@ -186,10 +211,11 @@ class Algo_play():
         # 3. valr - check for funds, execute sell order when they have arived.
         funds_arived_valr = self._check_valr_funds(self.is_withdrawn, coin)
         if funds_arived_valr == True:
-            self.execute_sell_coins_valr(coin)
+            if self.SETTINGS.execute_order_valr == True:
+                self.execute_sell_coins_valr(coin)
 
-            coin_quotes = self.kucoin.get_withdrawal_quotas(coin=coin)
-            self.DATA_LOG.set_kucoin_coin_fee(coin_fee=coin_quotes["withdrawMinFee"])
+                coin_quotes = self.kucoin.get_withdrawal_quotas(coin=coin)
+                self.DATA_LOG.set_kucoin_coin_fee(coin_fee=coin_quotes["withdrawMinFee"])
 
 
 
@@ -213,21 +239,28 @@ class Algo_play():
 
     def execute_sell_coins_valr(self, coin):
         """ Execute a sell order on valr exchange after funs has arived in account from Kucoin."""
+
         print("Valr - Selling: ", coin)
 
         balances = self.valr.Valr_get_balances(type="main")
         coin_balance = balances[coin]["available"]
 
+        self.valr.SELL_coin_to_ZAR(amount_in_coins=coin_balance, 
+                                   coin_pair=coin + "ZAR")
 
+        sleep(5)
 
-
-        print(balances[coin])
-
-
-
+        ZAR_funds = False
+        while ZAR_funds != True:
+            ZAR_balance = self.valr.Valr_get_balances(type="main")["ZAR"]["available"]
+            print("checking ZAR funds ", ZAR_balance)
+            sleep(3)
+            if float(ZAR_balance) >= float(500):
+                break
 
         # Set system to reverse arbitrage - we need to get the funds back to Kucoin at the cheapest cost.
         self.DATA_LOG.set_fund_position(position="reverse_arbitrage")
+        self.DATA_LOG.set_valr_ZAR(ZAR_amount=ZAR_balance)
 
 
 
@@ -390,7 +423,8 @@ if __name__ == "__main__":
     PRINT_STATEMENT = False
     WAIT_FOR_FUNDS_KUCOIN = False
     WAIT_FOR_FUNDS_VALR = False
-    EXECUTE_SELL_COINS_VALR = True
+    EXECUTE_SELL_COINS_VALR = False
+    EXECUTE_TRADE_REVERSE = True
 
     TRADEPAIR_ALLOWED =  ["ETH", "BTC", "XRPZ", "BNB", "SOL", "AVAX", "SHIB"]
     VALR_COINPAIR = ["ETHZAR", "BTCZAR", "XRPZAR", "BNBZAR", "SOLZAR", "AVAXZAR", "SHIBZAR"]
@@ -424,4 +458,7 @@ if __name__ == "__main__":
         print(algo_play.wait_for_funds_VALR(coins="XRP"))
 
     if EXECUTE_SELL_COINS_VALR == True:
-        algo_play.execute_sell_coins_valr(coin="XRP")
+        algo_play.execute_sell_coins_valr(coin="SOL")
+
+    if EXECUTE_TRADE_REVERSE == True:
+        algo_play.execute_trade_reverse(coin="XRP", percent_difference=1, percent_increase=1)
