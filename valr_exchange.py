@@ -170,12 +170,12 @@ if __name__ == "__main__":
     acc_name = valr_c.SETTINGS.valr_arbitrage_acc_name
 
     GET_VALR_MARKET = False
-    VALR_GET_BALANCES = False
+    VALR_GET_BALANCES = True
     RETURN_COINPAIR_DATA = False
     RETURN_COINPAIR_GROUP = False
     GET_ACCOUNT_ID = False
     GET_BALANCES = False
-    RETURN_ACCOUNT_WALLET_ADDRESS = True
+    RETURN_ACCOUNT_WALLET_ADDRESS = False
 
     if GET_VALR_MARKET == True:
         print(valr_c.get_valr_market())
