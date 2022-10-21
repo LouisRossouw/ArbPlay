@@ -166,10 +166,10 @@ if __name__ == "__main__":
     RETURN_ACCOUNT = False
     GET_ACCOUNT = False
     GET_FIAT_PRICE_FOR_COIN = False
-    WITHDRAWEL_TO_ADDRESS = True
+    WITHDRAWEL_TO_ADDRESS = False
     SELL_COIN = False
     BUY_COIN = False
-    GET_WITHDRAWAL_QUOTES = False
+    GET_WITHDRAWAL_QUOTES = True
     INNER_TRANSFER = False
 
 
