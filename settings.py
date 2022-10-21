@@ -25,6 +25,7 @@ class Settings():
 
         # Valr
         self.valr_arbitrage_acc_name = "BOTARB"
+        self.execute_order_valr = False
 
 
 
