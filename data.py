@@ -84,6 +84,15 @@ class Data_log():
 
 
 
+    def set_valr_ZAR(self, ZAR_amount):
+        """ sets the amount of ZAR deposited into the valr zar account from sale. """
+
+        self.data_file["ZAR_funds"] = ZAR_amount
+        utils.write_to_json(self.data_path, self.data_file)
+
+
+
+
 
 
 if __name__ == "__main__":
