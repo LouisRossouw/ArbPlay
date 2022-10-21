@@ -49,6 +49,14 @@ class Data_log():
 
 
 
+    def set_kucoin_coin_fee(self, coin_fee):
+        """ Sets the coins transfer fee for withdrawels. """
+
+        self.data_file["Kucoin_coin_fee"] = coin_fee
+        utils.write_to_json(self.data_path, self.data_file)  
+
+
+
 
     def set_kucoin_Coin(self, coin):
         """ Sets the current USDT balance before execution. """
