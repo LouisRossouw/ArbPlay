@@ -37,6 +37,7 @@ class Kucoin():
 
     def get_deposit_address(self, coin):
         """ Retrieves the wallet address for a specific coin. (might need to create one first)"""
+        # self.client.create_deposit_address(currency=coin)
         address = self.client.get_deposit_address(currency=coin)
         return address
 
@@ -169,9 +170,17 @@ if __name__ == "__main__":
     WITHDRAWEL_TO_ADDRESS = False
     SELL_COIN = False
     BUY_COIN = False
-    GET_WITHDRAWAL_QUOTES = True
+    GET_WITHDRAWAL_QUOTES = False
     INNER_TRANSFER = False
+    GET_DEPOSIT_ADDRESS = True
 
+
+    if GET_DEPOSIT_ADDRESS == True:
+        data = kucoin_class.get_deposit_address(coin="ANC")
+        if bool(data) != False:
+            print("ye")
+        else:
+            print("eys")
 
     if RETURN_COINPAIR_DATA == True:
         market_data = kucoin_class.client.get_ticker()["ticker"]
@@ -205,7 +214,7 @@ if __name__ == "__main__":
         # AVAX +- 5 seconds @ 0.1 / 3 ZAR - good - mght not be allowed to withdraw.
 
     if SELL_COIN == True:
-        kucoin_class.sell_coin(coin_pair="AFK-USDT", amount_in_USDT="10")
+        kucoin_class.sell_coin(coin_pair="AFK-USDT", amount_in_coins=10)
 
     if BUY_COIN == True:
         kucoin_class.buy_coin(coin_pair="XRP-USDT", amount_in_USDT=10)

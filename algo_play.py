@@ -1,4 +1,4 @@
-from re import T
+import math
 import utils
 from time import sleep
 
@@ -74,7 +74,7 @@ class Algo_play():
         self.kucoin.buy_coin(coin_pair=coin_pairs, amount_in_USDT=USDT_balance)
 
         # 2.2. while loop until funds reflect in the coins address,
-        KUCOIN_Funds_ready = self.wait_for_funds_KUCOIN(coin)
+        KUCOIN_Funds_ready = self.wait_for_funds_KUCOIN(coin, acc_type="trade")
 
         return KUCOIN_Funds_ready
 
@@ -134,12 +134,15 @@ class Algo_play():
         # 7. wait for a new arbitrage oppertunity. - repeat
 
         enough_ZAR = False
+        enough_COIN = False # TEST -  CHANGE THIS BACK TO FALSE WHEN IM DONE TESTING !
+        funds_arived = False
         execute_valr_orders = self.SETTINGS.execute_order_valr
+        execute_valr_withdraws = self.SETTINGS.execute_withdrawels_valr
 
         print("\n*** Reverse Arbitrage oppertunity - ", coin, str(percent_difference) + "%")
 
         # # 1. check if enough ZAR in account.
-        ZAR_balance = self.valr.Valr_get_balances(type="main")["ZAR"]["available"]
+        ZAR_balance = (self.valr.Valr_get_balances(type="main")["ZAR"]["available"]).split(".")[0]
         if float(ZAR_balance) >= float(1000):
             enough_ZAR = True
             
@@ -147,38 +150,120 @@ class Algo_play():
         if enough_ZAR == True:
             if execute_valr_orders == True:
                 print("VALR - BUY ", coin, " R", ZAR_balance)
-                self.valr.BUY_ZAR_to_coin(amount_in_coins=ZAR_balance, coin_pair=coin+"ZAR")
 
-        enough_COIN = False
-        while enough_COIN != True:
-            COIN_balance = self.valr.Valr_get_balances(type="main")[coin]["available"]
-            print("VALR - Checking coin Balance ", COIN_balance, coin)
-            sleep(2)
-            if float(COIN_balance) >= float(1):
-                enough_COIN = True
-                break
+                # Get coins askPrice to store in data for later.
+                market_data = self.valr.Valr_client.get_market_summary()
+                coin_askPrice = self.valr.return_coinPair_data(coinpair=coin+"ZAR", market_data=market_data)["askPrice"]
+
+                amount_coins_buy = float(float(ZAR_balance) / float(coin_askPrice))
+                rounded_coins = math.floor(amount_coins_buy * 100)/100.0
+                self.valr.BUY_ZAR_to_coin(amount_in_coins=rounded_coins, coin_pair=coin+"ZAR")
+
+
+                self.DATA_LOG.set_valr_coin_askPrice(coin_price_ZAR=coin_askPrice)
+                self.DATA_LOG.set_valr_coin_amount(coin=coin)
+
+
+                while enough_COIN != True:
+                    COIN_balance = self.valr.Valr_get_balances(type="main")[coin]["available"]
+                    print("VALR - Checking coin Balance ", COIN_balance, coin)
+                    sleep(2)
+                    if float(COIN_balance) >= float(1):
+                        enough_COIN = True
+                        break
         
+
         if enough_COIN == True:
-            print("VALR - WITHDRAW to Kucoin ", coin, COIN_balance)
+            if execute_valr_withdraws == True:
+                print("VALR - WITHDRAW to Kucoin ", coin)
+
+                withdraw_info = self.valr.Valr_client.get_crypto_withdrawal_info(currency_code=coin)
+
+                isActive = withdraw_info["isActive"]
+                withdrawalDecimalPlaces = withdraw_info["withdrawalDecimalPlaces"]
+                withdrawCost = withdraw_info["withdrawCost"]
+                supportsPaymentReference = withdraw_info["supportsPaymentReference"]
+                minimumWithdrawAmount = withdraw_info["minimumWithdrawAmount"]
+
+                
+                # return kucoin wallet address for coin
+                kucoin_coin_wallet_data = self.kucoin.get_deposit_address(coin=coin)
+                if bool(kucoin_coin_wallet_data) != False:
+
+                    kucoin_address = kucoin_coin_wallet_data[0]["address"]
+                    kucoin_memo = kucoin_coin_wallet_data[0]["memo"]
+                    kucoin_chain = kucoin_coin_wallet_data[0]["chain"]
+
+                    print("KUCOIN - ", kucoin_address, kucoin_memo, kucoin_chain)
+
+                    COIN_balance = self.valr.Valr_get_balances(type="main")[coin]["available"]
+                    round_amount = round(float(COIN_balance), 2)
+
+                    print(round_amount, minimumWithdrawAmount, withdrawCost, withdrawalDecimalPlaces)        
+                    print("VALR - Withdrawing ", round_amount, kucoin_address)
+
+                    pay = self.valr.Valr_client.post_crypto_withdrawal(currency_code=coin, 
+                                                                 amount=round_amount,
+                                                                 address=kucoin_address,
+                                                                 payment_reference=kucoin_memo
+                                                                 )
+
+                    while True:
+                        sleep(2)
+                        print("Checking")
+                        funds_arived = self.wait_for_funds_KUCOIN(coin=coin, acc_type="main")
+                        if funds_arived == True:
+                            break
+
+        # Transfer from main to trade account to sell.
+        if funds_arived == True:
+            print("KUCOIN - Selling to USDT.")
+
+            all_accounts = self.kucoin.client.get_accounts()
+            coin_account = self.kucoin.get_account(coin=coin, 
+                                                   accounts=all_accounts, 
+                                                   account_type="main")
+
+            coin_balance = coin_account["balance"]
+
+            # transfer to trade account to sell.
+            self.kucoin.inner_transfer(coin=coin, from_account="main", to_account="trade", amount_coins=coin_balance)
+
+        # Wait for coins value to == the original price that was on valr, before selling.
+        while True:
+            sleep(5)
+            print("--")
+
+            valr_coin_askPrice = self.DATA_LOG.return_valr_coin_askPrice()
+
+            fiat_prices = self.kucoin.get_fiat_price_for_coin(fiat="ZAR")
+            kucoin_coin_value = fiat_prices[coin]
+
+            percentage_difference = utils.get_percentage_difference(kucoin_coin_value, 
+                                                                    valr_coin_askPrice)
+            valr_coin_amount = self.DATA_LOG.return_data("valr_coin_amount")
+
+            current = float(valr_coin_amount) * float(kucoin_coin_value)
+            valr_cur = float(valr_coin_amount) * float(valr_coin_askPrice)
+
+            # for print statements.
+            VLRrcn_pr = str(round(float(valr_coin_askPrice),2))
+            KCcn_pr = str(round(float(kucoin_coin_value),2))
+            prcnt = str(round(float(percentage_difference),2))
+            crnt = str(round(float(current),2))  
+            vlr_cnnt = str(round(float(valr_cur),2)) 
+
+            print("KUCOIN - Waiting to sell: ","R"+str(VLRrcn_pr), KCcn_pr, prcnt+"%", "R"+str(crnt), " R"+str(vlr_cnnt))
 
 
+            if float(kucoin_coin_value) >= float(valr_coin_askPrice):
 
-        # if self.SETTINGS.execute_order == True:
-        #     if enough_ZAR == True:
+                accounts = self.kucoin.client.get_accounts()
+                amount_coins = self.kucoin.get_account(coin=coin, accounts=accounts, account_type="trade")["balance"]
+                print("KUCOIN - selling: ", amount_coins)
+                self.kucoin.sell_coin(coin+"-USDT", amount_in_coins=amount_coins)
 
-        #         # 2.2 Buy coin and return True if in account.
-        #         VALR_Funds_ready = "self._buy_coins(coin, coin_pairs, USDT_balance)"
-
-        #         # 2.3. execute transfer to local wallet.
-        #         if VALR_Funds_ready == True:
-        #             self.is_withdrawn = "self._execute_withdraw(coin)"
-
-        # # 3. KUCOIN - check for funds, execute sell order when they have arived.
-        # funds_arived_valr = "self._check_valr_funds(self.is_withdrawn, coin)"
-        # if funds_arived_valr == True:
-            
-        #     print("self.execute_sell_coins_valr(coin)")
-
+                self.DATA_LOG.set_fund_position(position="arbitrage")
 
 
 
@@ -292,8 +377,17 @@ class Algo_play():
 
 
 
-    def wait_for_funds_KUCOIN(self, coin):
+    def wait_for_funds_KUCOIN(self, coin, acc_type):
         """ waits in a while loop until funds arive in the coins account. - KUCOIN """
+
+        if coin == "XRP":
+            check_amount = 50
+        if coin == "AVAX":
+            check_amount = 2
+        if coin == "SOL":
+            check_amount = 1
+        else:
+            check_amount = 1
 
         self.coin_account_value = False
         while self.coin_account_value != True:
@@ -302,11 +396,11 @@ class Algo_play():
             all_accounts = self.kucoin.client.get_accounts()
             coin_account = self.kucoin.get_account(coin=coin, 
                                                    accounts=all_accounts, 
-                                                   account_type="trade")
+                                                   account_type=acc_type)
 
             print("kucoin - Checking Funds. - ", coin_account, coin)
             if coin_account != None:
-                if float(coin_account["balance"]) >= 50:
+                if float(coin_account["balance"]) >= check_amount:
                     self.coin_account_value = True
                     if self.coin_account_value == True:
                         print("KUCOIN - Funds True", coin)
@@ -415,7 +509,7 @@ if __name__ == "__main__":
 
     algo_play = Algo_play()
 
-    RUN = False
+    RUN = True
     SIGNAL = False
     ANALYSE = False
     COMPARE = False
@@ -424,7 +518,7 @@ if __name__ == "__main__":
     WAIT_FOR_FUNDS_KUCOIN = False
     WAIT_FOR_FUNDS_VALR = False
     EXECUTE_SELL_COINS_VALR = False
-    EXECUTE_TRADE_REVERSE = True
+    EXECUTE_TRADE_REVERSE = False
 
     TRADEPAIR_ALLOWED =  ["ETH", "BTC", "XRPZ", "BNB", "SOL", "AVAX", "SHIB"]
     VALR_COINPAIR = ["ETHZAR", "BTCZAR", "XRPZAR", "BNBZAR", "SOLZAR", "AVAXZAR", "SHIBZAR"]
@@ -437,7 +531,7 @@ if __name__ == "__main__":
         algo_play.execute_trade(coin="XRP")
 
     if WAIT_FOR_FUNDS_KUCOIN == True:
-        print(algo_play.wait_for_funds_KUCOIN(coin="XRP"))
+        print(algo_play.wait_for_funds_KUCOIN(coin="XRP", acc_type="main"))
 
     if PRINT_STATEMENT == True:
         algo_play.print_statement(18, 17, "XRPZAR", 5, 6)
@@ -461,4 +555,4 @@ if __name__ == "__main__":
         algo_play.execute_sell_coins_valr(coin="SOL")
 
     if EXECUTE_TRADE_REVERSE == True:
-        algo_play.execute_trade_reverse(coin="XRP", percent_difference=1, percent_increase=1)
+        algo_play.execute_trade_reverse(coin="AVAX", percent_difference=1, percent_increase=1)

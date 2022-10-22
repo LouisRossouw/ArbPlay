@@ -18,7 +18,7 @@ class Valr():
         self.VALR_SECRET_KEY = os.getenv('VALR_API_KEY_SECRET')
         self.Valr_client = Client(api_key=self.VALR_KEY, api_secret=self.VALR_SECRET_KEY)
 
-  
+
 
 
 
@@ -149,6 +149,8 @@ class Valr():
     def BUY_ZAR_to_coin(self, amount_in_coins, coin_pair):
         """ Buy Zar to coin. """
 
+        
+
         self.Valr_client.post_market_order(
                             pair=str(coin_pair),
                             side='BUY',
@@ -162,18 +164,19 @@ if __name__ == "__main__":
 
     valr_c = Valr()
 
-    COINPAIR = "XRPZAR"
+    COINPAIR = "AVAXZAR"
     COINPAIR_GRP = ["XRPZAR", "ETHZAR", "BTCZAR"]
 
     acc_name = valr_c.SETTINGS.valr_arbitrage_acc_name
 
     GET_VALR_MARKET = False
-    VALR_GET_BALANCES = True
-    RETURN_COINPAIR_DATA = False
+    VALR_GET_BALANCES = False
+    RETURN_COINPAIR_DATA = True
     RETURN_COINPAIR_GROUP = False
     GET_ACCOUNT_ID = False
     GET_BALANCES = False
     RETURN_ACCOUNT_WALLET_ADDRESS = False
+    TEST = False
 
     if GET_VALR_MARKET == True:
         print(valr_c.get_valr_market())
@@ -182,7 +185,8 @@ if __name__ == "__main__":
         print(valr_c.Valr_get_balances(type="main"))
 
     if RETURN_COINPAIR_DATA == True:
-        print(valr_c.return_coinPair_data(coinpair=COINPAIR))
+        market_data = valr_c.Valr_client.get_market_summary()
+        print(valr_c.return_coinPair_data(coinpair=COINPAIR, market_data=market_data))
 
     if RETURN_COINPAIR_GROUP == True:
         print(valr_c.return_coinPair_group(coinpair_group=COINPAIR_GRP))
@@ -193,8 +197,15 @@ if __name__ == "__main__":
     if GET_BALANCES == True:
         ID = valr_c.get_account_ID(acc_label=acc_name)
         bal = valr_c.get_balances(acc_ID=ID, account_type="main")
-        print(valr_c.parse_balances(balances=bal, coin="SHIB"))
+        print(valr_c.parse_balances(balances=bal, coin="AVAX"))
 
     if RETURN_ACCOUNT_WALLET_ADDRESS == True:
         sub_ID = valr_c.get_account_ID(acc_label=acc_name)
         print(valr_c.return_account_wallet_address(coin="XRP", subaccount_id=sub_ID, account_type="main"))
+
+    if TEST == True:
+        valr_c.Valr_client.post_crypto_withdrawal()
+        #prin9t(valr_c.Valr_client.get_whitelisted_address_book())
+        #print(valr_c.Valr_client.get_crypto_withdrawal_status(currency_code="XRP"))
+        #print(valr_c.Valr_client.post_fiat_withdrawal())
+

@@ -16,7 +16,13 @@ class Data_log():
 
 
 
-    
+    def return_data(self, key_name):
+
+        data = utils.read_json(self.data_path)[key_name]
+        return data
+
+
+
     def return_arbitrage_trade(self):
         """ returns the path to the arbitrage json file. """
 
@@ -38,6 +44,13 @@ class Data_log():
         position = utils.read_json(self.data_path)["position"]
         return position
 
+
+
+    def return_valr_coin_askPrice(self):
+        """ Returns the funds position. """
+
+        valr_coin_askPrice = utils.read_json(self.data_path)["valr_coin_askPrice"]
+        return valr_coin_askPrice
 
 
 
@@ -91,7 +104,18 @@ class Data_log():
         utils.write_to_json(self.data_path, self.data_file)
 
 
+    def set_valr_coin_askPrice(self, coin_price_ZAR):
+        """ Sets the purchased value of the coin in ZAR. """
 
+        self.data_file["valr_coin_askPrice"] = coin_price_ZAR
+        utils.write_to_json(self.data_path, self.data_file)
+
+
+    def set_valr_coin_amount(self, coin_amount):
+        """ Sets the current USDT balance before execution. """
+
+        self.data_file["valr_coin_amount"] = coin_amount
+        utils.write_to_json(self.data_path, self.data_file)  
 
 
 
