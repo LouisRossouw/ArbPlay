@@ -23,7 +23,7 @@ class Data_log():
     def return_arbitrage_trade(self):
         """ returns the path to the arbitrage json file. """
 
-        this_file = os.path.dirname(sys.argv[0])
+        this_file = os.path.dirname(os.path.abspath(__file__))
         data_file = f"{this_file}/data/arbitrage.json"
 
         if os.path.exists(data_file) != True:
