@@ -102,7 +102,7 @@ class Algo_play():
             # If there is no memo tag, then catch exception.
             try:
                 valr_memo_TAG = valr_coin_info["paymentReference"]
-            except EXCEPTION as e:
+            except Exception as e:
                 valr_memo_TAG = ""
                 
             valr_coin_address = valr_coin_info["address"]

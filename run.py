@@ -1,6 +1,7 @@
 from time import sleep
 
-from algo_play import Algo_play
+# from algo_play import Algo_play
+from arbMain import AlgoMain
 
 
 
@@ -9,14 +10,19 @@ def run():
 
     time_delay = 8
 
-    Aarbitrage_play = Algo_play()
+    Aarbitrage_play = AlgoMain()
 
 
     while True:
 
         print("---")
         
-        Aarbitrage_play.run()
+        try:
+            Aarbitrage_play.run()
+        except Exception as e:
+            print(e)
+            input()
+
 
         print("---")
         sleep(time_delay)
