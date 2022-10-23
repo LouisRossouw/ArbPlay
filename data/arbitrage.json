@@ -1,8 +1,8 @@
 {
-      "position": "reverse_arbitrage",
+      "position": "arbitrage",
       "ZAR_funds": "2021.094302569500050737",
       "valr_coin_askPrice": "288",
-      "valr_coin_amount": 6.84,
+      "valr_coin_amount": 6.81,
       "rebalancing": false,
-      "coin_to_rebalance": "XRP"
+      "coin_to_rebalance": "AVAX"
 }

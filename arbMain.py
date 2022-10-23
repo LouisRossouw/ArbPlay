@@ -1,5 +1,4 @@
 import utils
-from time import sleep
 
 from data import Data_log
 from settings import Settings
@@ -9,6 +8,8 @@ from valr_exchange import Valr
 
 from arb import Algo_arbitrage
 from arb_reverse import Algo_arbitrage_reverse
+
+
 
 class AlgoMain():
     """ A class to store all the settings for algo play. """
@@ -46,6 +47,7 @@ class AlgoMain():
         rebalancing = self.DATA_LOG.return_data(key_name="rebalancing")
 
         if rebalancing == False:
+            
             # Compare prices between 2 exchanges.
             return_analyse = self.compare(self.valr_data[0], kucoin_data)
             self.signal(return_analyse)

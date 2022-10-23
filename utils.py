@@ -15,6 +15,7 @@ def write_to_json(json_path, data):
 
 def read_json(json_path):
     """ Reads json file """
+
     with open(json_path) as f:
         json_file = json.loads(f.read())
 
@@ -25,7 +26,9 @@ def read_json(json_path):
 
 def get_percentage_difference(new_value, original_value):
     """ finds the percentage difference between new number and original """
+
     output_value = ((float(new_value) - float(original_value)) / float(original_value)) * 100
+
     return(output_value)
 
 
@@ -33,7 +36,9 @@ def get_percentage_difference(new_value, original_value):
 
 def percent_increase(percent, input_value):
     """ adds a percent to a value and returns it"""
+    
     output_value = float(((input_value / 100) * float(percent)) + float(input_value))
+
     return(float(output_value))
 
 
@@ -51,4 +56,4 @@ if __name__ == "__main__":
         print(get_percentage_difference(1981.5, 1957.88))
 
     if CHECK_percent_increase == True:
-        print(percent_increase(0.9, 2000))
+        print(percent_increase(1.7, 50000))

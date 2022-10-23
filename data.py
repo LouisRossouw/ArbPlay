@@ -1,4 +1,5 @@
 import os
+import sys
 import utils as utils
 from settings import Settings
 
@@ -22,7 +23,7 @@ class Data_log():
     def return_arbitrage_trade(self):
         """ returns the path to the arbitrage json file. """
 
-        this_file = os.path.dirname(__file__)
+        this_file = os.path.dirname(sys.argv[0])
         data_file = f"{this_file}/data/arbitrage.json"
 
         if os.path.exists(data_file) != True:
@@ -122,3 +123,5 @@ class Data_log():
 if __name__ == "__main__":
 
     data_log = Data_log()
+
+    print(data_log.return_arbitrage_trade())

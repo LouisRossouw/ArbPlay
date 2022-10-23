@@ -24,6 +24,7 @@ class Algo_arbitrage_reverse():
 
 
 
+
     def _PRINT_arbitrage(self, coin, percent_difference):
         """ Simply Prints when an arbitrage oppertunity appears. """
 
@@ -49,6 +50,7 @@ class Algo_arbitrage_reverse():
 
 
 
+
     def _execute_buy_COIN(self, coin, ZAR_balance):
         """ If enough ZAR exists, then buy coins. """
 
@@ -56,7 +58,8 @@ class Algo_arbitrage_reverse():
 
         # Get coins askPrice to store in data for later.
         market_data = self.valr.Valr_client.get_market_summary()
-        coin_askPrice = self.valr.return_coinPair_data(coinpair=coin+"ZAR", market_data=market_data)["askPrice"]
+        coin_askPrice = self.valr.return_coinPair_data(coinpair=coin+"ZAR", 
+                                                       market_data=market_data)["askPrice"]
 
         amount_coins_buy = float(float(ZAR_balance) / float(coin_askPrice))
         rounded_coins = math.floor(amount_coins_buy * 100)/100.0
@@ -129,6 +132,7 @@ class Algo_arbitrage_reverse():
 
 
 
+
     def _inner_trasfer(self, coin):
         """ Transfer coins from main to trade account to be ready to sell. """
 
@@ -180,7 +184,6 @@ class Algo_arbitrage_reverse():
 
             print("KUCOIN - Waiting to sell: ","R"+str(VLRrcn_pr), KCcn_pr, prcnt+"%", "R"+str(crnt), " R"+str(vlr_cnnt))
 
-
             if float(kucoin_coin_value) >= float(valr_coin_askPrice):
 
                 accounts = self.kucoin.client.get_accounts()
@@ -194,9 +197,6 @@ class Algo_arbitrage_reverse():
                 self.DATA_LOG.set_fund_position(position="arbitrage")
                 self.DATA_LOG.set_data(key_name="rebalancing", 
                                        data=True)
-
-
-
 
 
 
@@ -219,12 +219,14 @@ class Algo_arbitrage_reverse():
             if execute_valr_orders == True:
 
                 # Buy coin.
-                self._execute_buy_COIN(coin=coin, ZAR_balance=enough_ZAR[0])
+                self._execute_buy_COIN(coin=coin, 
+                                       ZAR_balance=enough_ZAR[0])
 
                 # Check if coins exist.
                 enough_COIN = self._wait_for_coins(coin)
 
-                self.DATA_LOG.set_data(key_name="coin_to_rebalance", data=str(coin))
+                self.DATA_LOG.set_data(key_name="coin_to_rebalance", 
+                                       data=str(coin))
         
         if enough_COIN == True:
             if execute_valr_withdraws == True:
@@ -233,9 +235,8 @@ class Algo_arbitrage_reverse():
                 self._execute_valr_withdraw(coin)
 
                 # Wait for funds to arive.
-                funds_arived = self.wait_for_funds_KUCOIN(coin=coin, acc_type="main")
-
-
+                funds_arived = self.wait_for_funds_KUCOIN(coin=coin, 
+                                                          acc_type="main")
 
         # Transfer coins from main to trade account to be ready to sell.
         if funds_arived == True:
@@ -300,8 +301,13 @@ if __name__ == "__main__":
     EXECUTE_SELL_COINS_VALR = False
     EXECUTE_TRADE_REVERSE = False
 
+    EXECUTE_VALR_WITHDRAW = False
+
     if EXECUTE_TRADE == True:
         algo_play.execute_trade(coin="XRP")
 
     if WAIT_FOR_FUNDS_KUCOIN == True:
         print(algo_play.wait_for_funds_KUCOIN(coin="XRP", acc_type="main"))
+
+    if EXECUTE_VALR_WITHDRAW == True:
+        algo_play._execute_valr_withdraw(coin="AVAX")

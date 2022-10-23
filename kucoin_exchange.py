@@ -1,4 +1,3 @@
-from locale import currency
 import os
 
 from kucoin.client import Client
