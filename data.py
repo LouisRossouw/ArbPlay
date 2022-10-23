@@ -16,10 +16,6 @@ class Data_log():
 
 
 
-    def return_data(self, key_name):
-
-        data = utils.read_json(self.data_path)[key_name]
-        return data
 
 
 
@@ -36,6 +32,11 @@ class Data_log():
         return data_file
 
 
+    def return_data(self, key_name):
+        """ Generic return data for key. """
+        
+        data = utils.read_json(self.data_path)[key_name]
+        return data
 
 
     def return_funds_position(self):
@@ -45,13 +46,11 @@ class Data_log():
         return position
 
 
-
     def return_valr_coin_askPrice(self):
         """ Returns the funds position. """
 
         valr_coin_askPrice = utils.read_json(self.data_path)["valr_coin_askPrice"]
         return valr_coin_askPrice
-
 
 
     def set_kucoin_USDT(self, USDT):
@@ -61,14 +60,11 @@ class Data_log():
         utils.write_to_json(self.data_path, self.data_file)  
 
 
-
     def set_kucoin_coin_fee(self, coin_fee):
         """ Sets the coins transfer fee for withdrawels. """
 
         self.data_file["Kucoin_coin_fee"] = coin_fee
         utils.write_to_json(self.data_path, self.data_file)  
-
-
 
 
     def set_kucoin_Coin(self, coin):
@@ -78,8 +74,6 @@ class Data_log():
         utils.write_to_json(self.data_path, self.data_file)  
 
 
-
-
     def set_kucoin_amount(self, amount_coins):
         """ Sets the current USDT balance before execution. """
 
@@ -87,14 +81,11 @@ class Data_log():
         utils.write_to_json(self.data_path, self.data_file)  
 
 
-
-
     def set_fund_position(self, position):
         """ sets the position of the funds. """
 
         self.data_file["position"] = position
         utils.write_to_json(self.data_path, self.data_file)
-
 
 
     def set_valr_ZAR(self, ZAR_amount):
@@ -116,6 +107,15 @@ class Data_log():
 
         self.data_file["valr_coin_amount"] = coin_amount
         utils.write_to_json(self.data_path, self.data_file)  
+
+
+    def set_data(self, key_name, data):
+        """ Generic data input. """
+
+        self.data_file[key_name] = data
+        utils.write_to_json(self.data_path, self.data_file)  
+
+
 
 
 
