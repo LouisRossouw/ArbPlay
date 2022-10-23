@@ -18,15 +18,15 @@ class Settings():
 
         # Kucoin
         self.trade_account = "trade"        # use either "trade" or "main" accounts
-        self.execute_withdrawels = False    # if True, withdraw / transfer coin to another wallet address.
-        self.execute_order = False          # If True, then buy a coin using usdc
-        self.execute_transfer = False
+        self.execute_withdrawels = True    # if True, withdraw / transfer coin to another wallet address.
+        self.execute_order = True          # If True, then buy a coin using usdc
+        self.execute_transfer = True
 
 
         # Valr
         self.valr_arbitrage_acc_name = "BOTARB"
-        self.execute_order_valr = False
-        self.execute_withdrawels_valr = False
+        self.execute_order_valr = True
+        self.execute_withdrawels_valr = True
 
 
 
