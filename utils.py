@@ -42,13 +42,13 @@ def percent_increase(percent, input_value):
 if __name__ == "__main__":
 
 
-    CHECK_get_percentage_difference = True
-    CHECK_percent_increase = False
-
+    CHECK_get_percentage_difference = False
+    CHECK_percent_increase = True
+    # 1.2%
 
     if CHECK_get_percentage_difference == True:
         # buy on Kucoin / sell on Valr ("sell_valr", "ask_kucoin")
-        print(get_percentage_difference(8.77, 8.47))
+        print(get_percentage_difference(1981.5, 1957.88))
 
     if CHECK_percent_increase == True:
-        print(percent_increase(0.1, 10000))
+        print(percent_increase(0.9, 2000))
