@@ -64,7 +64,7 @@ class Algo_arbitrage_reverse():
 
 
         self.DATA_LOG.set_valr_coin_askPrice(coin_price_ZAR=coin_askPrice)
-        self.DATA_LOG.set_valr_coin_amount(coin=coin)
+        self.DATA_LOG.set_valr_coin_amount(coin_amount=rounded_coins)
 
 
 
