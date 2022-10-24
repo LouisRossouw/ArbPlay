@@ -13,7 +13,7 @@ class Kucoin():
 
         api_key = os.getenv('KUCOIN_API_KEY')
         api_secret = os.getenv('KUCOIN_API_KEY_SECRET')
-        api_passphrase = os.getenv('KUCOIN_PHASSPHRASE')
+        api_passphrase = os.getenv('KUCOIN_PASSPHRASE')
 
         self.client = Client(api_key, api_secret, api_passphrase)
         # or connect to Sandbox
