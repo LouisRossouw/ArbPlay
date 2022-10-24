@@ -241,16 +241,9 @@ class Algo_arbitrage_reverse():
         # Transfer coins from main to trade account to be ready to sell.
         if funds_arived == True:
 
-            status = self._inner_trasfer()
+            status = self._inner_trasfer(coin=coin)
 
             self.DATA_LOG.set_data(key_name="rebalancing", data=True)
-
-
-
-
-
-
-
 
 
 
