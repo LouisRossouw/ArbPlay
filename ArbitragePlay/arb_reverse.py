@@ -1,12 +1,17 @@
+import os
+import sys
 import math
-import DripDrip.utils as utils
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import toolUtils.utils as utils
 from time import sleep
 
 from data import Data_log
-from settings import Settings
+from Settings import Settings
 
-from kucoin_exchange import Kucoin
-from valr_exchange import Valr
+from Exchanges.kucoin_exchange import Kucoin
+from Exchanges.valr_exchange import Valr
 
 
 class Algo_arbitrage_reverse():
@@ -66,8 +71,8 @@ class Algo_arbitrage_reverse():
         self.valr.BUY_ZAR_to_coin(amount_in_coins=rounded_coins, coin_pair=coin+"ZAR")
 
 
-        self.DATA_LOG.set_valr_coin_askPrice(coin_price_ZAR=coin_askPrice)
-        self.DATA_LOG.set_valr_coin_amount(coin_amount=rounded_coins)
+        self.DATA_LOG.set_data(key_name="valr_coin_askPrice", data=coin_askPrice)
+        self.DATA_LOG.set_data(key_name="valr_coin_amount", data=rounded_coins)
 
 
 
@@ -163,7 +168,7 @@ class Algo_arbitrage_reverse():
             sleep(5)
             print("--")
 
-            valr_coin_askPrice = self.DATA_LOG.return_valr_coin_askPrice()
+            valr_coin_askPrice = self.DATA_LOG.return_data("valr_coin_askPrice")
 
             fiat_prices = self.kucoin.get_fiat_price_for_coin(fiat="ZAR")
             kucoin_coin_value = fiat_prices[coin]
@@ -194,9 +199,8 @@ class Algo_arbitrage_reverse():
                 print("KUCOIN - selling: ", amount_coins)
                 self.kucoin.sell_coin(coin+"-USDT", amount_in_coins=amount_coins)
 
-                self.DATA_LOG.set_fund_position(position="arbitrage")
-                self.DATA_LOG.set_data(key_name="rebalancing", 
-                                       data=True)
+                self.DATA_LOG.set_data(key_name="position", data="arbitrage")
+                self.DATA_LOG.set_data(key_name="rebalancing", data=True)
 
 
 

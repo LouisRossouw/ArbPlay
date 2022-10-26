@@ -1,10 +1,15 @@
-import DripDrip.utils as utils
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import toolUtils.utils as utils
 
 from data import Data_log
-from settings import Settings
+from Settings import Settings
 
-from kucoin_exchange import Kucoin
-from valr_exchange import Valr
+from Exchanges.kucoin_exchange import Kucoin
+from Exchanges.valr_exchange import Valr
 
 from arb import Algo_arbitrage
 from arb_reverse import Algo_arbitrage_reverse
@@ -70,7 +75,7 @@ class AlgoMain():
 
         force_signal = self.SETTINGS.force_signal[0]
         force_coin = self.SETTINGS.force_signal[1]
-        position = self.DATA_LOG.return_funds_position()
+        position = self.DATA_LOG.return_data(key_name="position")
 
         # Force a signal execution to run tests.
         if force_signal == True:
@@ -114,14 +119,14 @@ class AlgoMain():
 
         print("Rebalancing --")
 
-        valr_coin_askPrice = self.DATA_LOG.return_valr_coin_askPrice()
+        valr_coin_askPrice = self.DATA_LOG.return_data(key_name="valr_coin_askPrice")
 
         fiat_prices = self.kucoin.get_fiat_price_for_coin(fiat="ZAR")
         kucoin_coin_value = fiat_prices[coin]
 
         percentage_difference = utils.get_percentage_difference(kucoin_coin_value, 
                                                                 valr_coin_askPrice)
-        valr_coin_amount = self.DATA_LOG.return_data("valr_coin_amount")
+        valr_coin_amount = self.DATA_LOG.return_data(key_name="valr_coin_amount")
 
         current = float(valr_coin_amount) * float(kucoin_coin_value)
         valr_cur = float(valr_coin_amount) * float(valr_coin_askPrice)
@@ -146,9 +151,8 @@ class AlgoMain():
             print("KUCOIN - selling: ", amount_coins)
             self.kucoin.sell_coin(coin+"-USDT", amount_in_coins=amount_coins)
 
-            self.DATA_LOG.set_fund_position(position="arbitrage")
-            self.DATA_LOG.set_data(key_name="rebalancing", 
-                                    data=False)
+            self.DATA_LOG.set_data(key_name="position", data="arbitrage") 
+            self.DATA_LOG.set_data(key_name="rebalancing", data=False)
 
 
 
@@ -157,7 +161,7 @@ class AlgoMain():
         """ Compares the price difference betweem local and international. """
 
         data = {}
-        print(self.DATA_LOG.return_funds_position())
+        print(self.DATA_LOG.return_data(key_name="position"))
         kucoin_fiat_prices = self.kucoin.get_fiat_price_for_coin(fiat="ZAR")
 
         # i can buy at kucoin int_ask and sell at valr loc_bid

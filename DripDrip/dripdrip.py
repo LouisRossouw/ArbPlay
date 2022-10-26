@@ -1,6 +1,12 @@
 import os
-import utils
+import sys
 import random
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import toolUtils.utils as utils
+import Exchanges.valr_exchange as VALR
+
 
 
 class DripDrip():
@@ -8,6 +14,8 @@ class DripDrip():
 
     def __init__(self):
         """ Initialize drip. """
+
+        VALR_EXCHANGE = VALR.Valr()
 
         self.days = 21
         self.amount_capital = 10000

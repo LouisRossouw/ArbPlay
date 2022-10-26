@@ -1,10 +1,15 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from time import sleep
 
 from data import Data_log
-from settings import Settings
+from Settings import Settings
 
-from kucoin_exchange import Kucoin
-from valr_exchange import Valr
+from Exchanges.kucoin_exchange import Kucoin
+from Exchanges.valr_exchange import Valr
 
 
 class Algo_arbitrage():
@@ -38,7 +43,7 @@ class Algo_arbitrage():
         if self.SETTINGS.execute_order == True:
             if enough_usdc[0] == True:
 
-                self.DATA_LOG.set_kucoin_USDT(enough_usdc[1])
+                self.DATA_LOG.set_data(key_name="Kucoin_USDT", data=enough_usdc[1])
 
                 # 2.2 Buy coin and return True if in account.
                 KUCOIN_Funds_ready = self._buy_coins(coin, 
@@ -57,7 +62,8 @@ class Algo_arbitrage():
                 self._execute_sell_coins_valr(coin)
 
                 coin_quotes = self.kucoin.get_withdrawal_quotas(coin=coin)
-                self.DATA_LOG.set_kucoin_coin_fee(coin_fee=coin_quotes["withdrawMinFee"])
+                self.DATA_LOG.set_data(key_name="Kucoin_coin_fee", 
+                                       data=coin_quotes["withdrawMinFee"])
 
 
 
@@ -127,8 +133,9 @@ class Algo_arbitrage():
                                                        amount_of_coin=coin_account, 
                                                        wallet_address=valr_coin_address, 
                                                        memo_tag=valr_memo_TAG) # Transfer to valr exchange.
-            self.DATA_LOG.set_kucoin_Coin(coin)
-            self.DATA_LOG.set_kucoin_amount(coin_account)
+
+            self.DATA_LOG.set_data(key_name="Kucoin_coin", data=coin)
+            self.DATA_LOG.set_data(key_name="Kucoin_amount",data=coin_account)
 
             print("withdrawn ", result)
             is_withdrawn = True
@@ -181,8 +188,8 @@ class Algo_arbitrage():
                 break
 
         # Set system to reverse arbitrage - we need to get the funds back to Kucoin at the cheapest cost.
-        self.DATA_LOG.set_fund_position(position="reverse_arbitrage")
-        self.DATA_LOG.set_valr_ZAR(ZAR_amount=ZAR_balance)
+        self.DATA_LOG.set_data(key_name="position", data="reverse_arbitrage")
+        self.DATA_LOG.set_data(key_name="ZAR_funds", data=ZAR_balance)
         sleep(10)
 
 

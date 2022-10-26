@@ -1,5 +1,4 @@
 import os
-from settings import Settings
 
 from valr_python import Client
 from valr_python.exceptions import IncompleteOrderWarning
@@ -12,8 +11,6 @@ class Valr():
     def __init__(self):
         """ Initialize trading Valr. """
 
-        self.SETTINGS = Settings()
-
         self.VALR_KEY = os.getenv('VALR_API_KEY')
         self.VALR_SECRET_KEY = os.getenv('VALR_API_KEY_SECRET')
         self.Valr_client = Client(api_key=self.VALR_KEY, api_secret=self.VALR_SECRET_KEY)
@@ -25,10 +22,11 @@ class Valr():
 
     def return_account_wallet_address(self, coin, subaccount_id, account_type):
         """ returns the wallet address for the specific coin, 
-        if a subaccount ID is not given, it will use the default address. """
+            if a subaccount ID is not given, it will use the default address. """
 
         if account_type == "sub":
-            address = self.Valr_client.get_deposit_address(currency_code=coin, subaccount_id=subaccount_id)
+            address = self.Valr_client.get_deposit_address(currency_code=coin, 
+                                                           subaccount_id=subaccount_id)
         if account_type == "main":
             address = self.Valr_client.get_deposit_address(currency_code=coin)
 
@@ -93,7 +91,6 @@ class Valr():
     def get_account_ID(self, acc_label):
         """ Returns accounts ID. """
 
-        acc_label = self.SETTINGS.valr_arbitrage_acc_name
         all_accounts = self.Valr_client.get_subaccounts()
 
         for acc in all_accounts:
@@ -149,8 +146,6 @@ class Valr():
     def BUY_ZAR_to_coin(self, amount_in_coins, coin_pair):
         """ Buy Zar to coin. """
 
-        
-
         self.Valr_client.post_market_order(
                             pair=str(coin_pair),
                             side='BUY',
@@ -167,7 +162,7 @@ if __name__ == "__main__":
     COINPAIR = "AVAXZAR"
     COINPAIR_GRP = ["XRPZAR", "ETHZAR", "BTCZAR"]
 
-    acc_name = valr_c.SETTINGS.valr_arbitrage_acc_name
+    acc_name = "test"
 
     GET_VALR_MARKET = False
     VALR_GET_BALANCES = False
@@ -186,7 +181,8 @@ if __name__ == "__main__":
 
     if RETURN_COINPAIR_DATA == True:
         market_data = valr_c.Valr_client.get_market_summary()
-        print(valr_c.return_coinPair_data(coinpair=COINPAIR, market_data=market_data))
+        print(valr_c.return_coinPair_data(coinpair=COINPAIR, 
+                                          market_data=market_data))
 
     if RETURN_COINPAIR_GROUP == True:
         print(valr_c.return_coinPair_group(coinpair_group=COINPAIR_GRP))
@@ -201,7 +197,9 @@ if __name__ == "__main__":
 
     if RETURN_ACCOUNT_WALLET_ADDRESS == True:
         sub_ID = valr_c.get_account_ID(acc_label=acc_name)
-        print(valr_c.return_account_wallet_address(coin="XRP", subaccount_id=sub_ID, account_type="main"))
+        print(valr_c.return_account_wallet_address(coin="XRP", 
+                                                   subaccount_id=sub_ID, 
+                                                   account_type="main"))
 
     if TEST == True:
         valr_c.Valr_client.post_crypto_withdrawal()

@@ -1,7 +1,11 @@
 import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from kucoin.client import Client
-from settings import Settings
+from Settings import Settings
+
 
 class Kucoin():
     """ A class for Kucoin. """
@@ -16,6 +20,7 @@ class Kucoin():
         api_passphrase = os.getenv('KUCOIN_PASSPHRASE')
 
         self.client = Client(api_key, api_secret, api_passphrase)
+
         # or connect to Sandbox
         # client = Client(api_key, api_secret, api_passphrase, sandbox=True)
 
@@ -23,19 +28,26 @@ class Kucoin():
 
     def inner_transfer(self, coin, from_account, to_account, amount_coins):
         """ Transfers coins from trade account to main account or vice versa. """
-        self.client.create_inner_transfer(currency=coin, from_type=from_account, to_type=to_account, amount=amount_coins)
+
+        self.client.create_inner_transfer(currency=coin, 
+                                          from_type=from_account, 
+                                          to_type=to_account, amount=amount_coins)
 
 
 
     def get_withdrawal_quotas(self, coin):
-        """ Retrieves the cost of transfer for the specific coin. (0.5 XRP) x Rands = value in Rands. """
+        """ Retrieves the cost of transfer for the specific coin. 
+            (0.5 XRP) x Rands = value in Rands. """
+
         quote = self.client.get_withdrawal_quotas(currency=coin)
         return quote
 
 
 
     def get_deposit_address(self, coin):
-        """ Retrieves the wallet address for a specific coin. (might need to create one first)"""
+        """ Retrieves the wallet address for a specific coin. 
+            (might need to create one first) """
+
         # self.client.create_deposit_address(currency=coin)
         address = self.client.get_deposit_address(currency=coin)
         return address
@@ -43,7 +55,9 @@ class Kucoin():
 
 
     def get_fiat_price_for_coin(self, fiat):
-        """ Return the value of the coin in any fiat, perfect to find ZAR value on Kucoin. """
+        """ Return the value of the coin in any fiat, 
+            perfect to find ZAR value on Kucoin. """
+
         data = self.client.get_fiat_prices(base=fiat)
         return data
 
@@ -51,7 +65,8 @@ class Kucoin():
 
 
     def return_coinPair_group(self, coinpair_group):
-        """ returns a dict for inputed coinpair group, requires a list input. """
+        """ returns a dict for inputed coinpair group, 
+            requires a list input. """
 
         market_data = self.client.get_ticker()["ticker"]
         data = []
@@ -92,8 +107,8 @@ class Kucoin():
 
     def get_account(self, coin, accounts, account_type):
         """ Returns existing accounts on Kucoin.
-        # IMPORTANT - it is locked to a fixed IP address on kucoin, - need to make IP adress fixed.
-        """
+            - IMPORTANT - it is locked to a fixed IP address on kucoin, 
+            - need to make IP adress fixed. """
 
         data = None
 
@@ -104,7 +119,11 @@ class Kucoin():
 
             if coin == currency_coin:
                 if type == account_type:
-                    data = {"currency_coin":currency_coin, "type":type, "balance":balance}
+                    data = {
+                            "currency_coin":currency_coin, 
+                            "type":type, 
+                            "balance":balance
+                            }
             else:
                 pass
 
@@ -134,7 +153,8 @@ class Kucoin():
 
         if allow_place_order == True:
                                         # 'AFK-USDT'
-            self.client.create_market_order(coin_pair, "sell", size=amount_in_coins)
+            self.client.create_market_order(coin_pair, "sell", 
+                                            size=amount_in_coins)
         elif allow_place_order == False:
             print("** placing orders are dissabled in the Settings.py file. ** ")
 
@@ -148,7 +168,10 @@ class Kucoin():
         total = str(amount_of_coin).split(".")[0] # remove decimals.
 
         if allow_withdraws == True:
-            self.client.create_withdrawal(currency=coin, amount=total, address=wallet_address, memo=memo_tag, remark="Test")
+            self.client.create_withdrawal(currency=coin, 
+                                          amount=total, 
+                                          address=wallet_address, 
+                                          memo=memo_tag, remark="Test")
         else:
             print("** Withdrawels are dissabled in the Settings.py file. ** ")
 
@@ -183,7 +206,8 @@ if __name__ == "__main__":
 
     if RETURN_COINPAIR_DATA == True:
         market_data = kucoin_class.client.get_ticker()["ticker"]
-        print(kucoin_class.return_coinPair_data(coinpair=COINPAIR, market_data=market_data))
+        print(kucoin_class.return_coinPair_data(coinpair=COINPAIR, 
+                                                market_data=market_data))
 
     if RETURN_COINPAIR_GROUP == True:
         print(kucoin_class.return_coinPair_group(coinpair_group=COINPAIR_GRP))
@@ -194,7 +218,9 @@ if __name__ == "__main__":
     if GET_ACCOUNT == True:
         # IMPORTANT - it is locked to a fixed IP address on kucoin, - need to make IP adress fixed.
         accounts = kucoin_class.client.get_accounts()
-        print(kucoin_class.get_account(coin="SHIB", accounts=accounts, account_type="trade"))
+        print(kucoin_class.get_account(coin="SHIB", 
+                                       accounts=accounts, 
+                                       account_type="trade"))
 
     if GET_FIAT_PRICE_FOR_COIN == True:
         print(kucoin_class.get_fiat_price_for_coin(fiat="ZAR")["AFK"])
@@ -202,9 +228,10 @@ if __name__ == "__main__":
     if WITHDRAWEL_TO_ADDRESS == True:
         XRP_ADDRESS = "rfrnxmLBiXHj38a2ZUDNzbks3y6yd3wJnV"
         accounts = kucoin_class.client.get_accounts()
-        amount_available = kucoin_class.get_account(coin="XRP", accounts=accounts, account_type="main")["balance"]
+        amount_available = kucoin_class.get_account(coin="XRP", 
+                                                    accounts=accounts, 
+                                                    account_type="main")["balance"]
         print(XRP_ADDRESS, amount_available)
-        #kucoin_class.withdrawal_to_address(coin="USDT", amount_of_coin=amount_available, wallet_address=XRP_ADDRESS)
 
         # SHIBA INU, +- 10 min to transfer @ 600000 SHIB / 120 zar - ouch.
         # XRP +- less than 1min to transfer @ 0.5 XRP / 4.50 zar - good
@@ -228,6 +255,13 @@ if __name__ == "__main__":
         to_acc = "trade"
 
         accounts = kucoin_class.client.get_accounts()
-        amount_available = kucoin_class.get_account(coin=coin, accounts=accounts, account_type=from_acc)["balance"]
-        kucoin_class.inner_transfer(coin=coin, from_account=from_acc, to_account=to_acc, amount_coins=amount_available)
+        amount_available = kucoin_class.get_account(coin=coin, 
+                                                    accounts=accounts, 
+                                                    account_type=from_acc)["balance"]
+
+        kucoin_class.inner_transfer(coin=coin, 
+                                    from_account=from_acc, 
+                                    to_account=to_acc, 
+                                    amount_coins=amount_available)
+
         print("transfering ", amount_available)
