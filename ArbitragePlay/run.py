@@ -21,7 +21,7 @@ def run():
             Aarbitrage_play.run()
         except Exception as e:
             print(e)
-            input()
+            sleep(10)
 
 
         print("---")

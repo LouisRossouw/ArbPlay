@@ -116,7 +116,7 @@ class Algo_arbitrage_reverse():
             kucoin_chain = kucoin_coin_wallet_data[0]["chain"]
 
             COIN_balance = self.valr.Valr_get_balances(type="main")[coin]["available"]
-            round_amount = round(float(COIN_balance), 2)
+            round_amount = math.floor(float(COIN_balance) * 100)/100.0
 
             print("VALR - Withdrawing ", round_amount, kucoin_address)
             print("to KUCOIN - ", kucoin_address, kucoin_memo, kucoin_chain)
@@ -241,16 +241,9 @@ class Algo_arbitrage_reverse():
         # Transfer coins from main to trade account to be ready to sell.
         if funds_arived == True:
 
-            status = self._inner_trasfer()
+            status = self._inner_trasfer(coin=coin)
 
             self.DATA_LOG.set_data(key_name="rebalancing", data=True)
-
-
-
-
-
-
-
 
 
 
