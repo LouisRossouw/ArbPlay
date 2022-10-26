@@ -1,6 +1,6 @@
 import os
 import sys
-import utils as utils
+import DripDrip.utils as utils
 from settings import Settings
 
 

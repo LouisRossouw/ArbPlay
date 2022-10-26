@@ -183,6 +183,7 @@ class Algo_arbitrage():
         # Set system to reverse arbitrage - we need to get the funds back to Kucoin at the cheapest cost.
         self.DATA_LOG.set_fund_position(position="reverse_arbitrage")
         self.DATA_LOG.set_valr_ZAR(ZAR_amount=ZAR_balance)
+        sleep(10)
 
 
 

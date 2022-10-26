@@ -1,4 +1,4 @@
-import utils
+import DripDrip.utils as utils
 
 from data import Data_log
 from settings import Settings
