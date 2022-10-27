@@ -9,6 +9,7 @@ import Exchanges.valr_exchange as VALR
 
 
 
+
 class DripDrip():
     """ A class for the drip system. """
 
@@ -19,8 +20,8 @@ class DripDrip():
 
         self.days = 10
         self.amount_capital = 10000
-        self.sampleList = ["XRP", "BTC", "ADA", "SOL"]
-        self.weights = [70, 50, 20, 10]
+        self.invest_time = 23
+        self.drip_data_path = f"{os.path.dirname(__file__)}/drip_data.json"
 
         self.data = {
                         "XRP": 70,
@@ -31,9 +32,22 @@ class DripDrip():
 
 
 
-    def set_plan(self):
-        """ Sets the drip plan into the data.json. """
-        pass
+
+    def get_dripData(self, key_name):
+        """ Generic get data from drip_data.json. """   
+
+        drip_data = utils.read_json(self.drip_data_path)
+        return drip_data[key_name]
+
+
+
+
+    def set_dripData(self, key_name, data):
+        """ Generic set data to drip_data.json. """
+        
+        drip_data = utils.read_json(self.drip_data_path)
+        drip_data[key_name] = data
+        utils.write_to_json(self.drip_data_path, drip_data)
 
 
 
@@ -54,7 +68,9 @@ class DripDrip():
             coins.append(data)
             coin_values.append(value)
 
-        randomList = random.choices(coins, weights=coin_values, k=self.amount_capital)
+        randomList = random.choices(coins, 
+                                    weights=coin_values, 
+                                    k=self.amount_capital)
             
         data = {}
         for i in coins:
@@ -62,39 +78,65 @@ class DripDrip():
             coin_amount = randomList.count(i)
             data[i] = coin_amount / self.days
 
-        print(data)
+        self.set_dripData(key_name="plan", data=data)
 
 
 
 
-
-
-    def check_newDay(self):
+    def invested_today(self):
         """ Check if it is a new day, if True, execute trade. """
-        print("checkcheck")
-        return True
+
+        # compare the last investment date with the date now.
+        invested_date = self.get_dripData(key_name="last_invested_date")
+        todays_date = utils.get_dates()[0]
+        
+
+        if todays_date == invested_date:
+            Invested_today = True
+        else:
+            Invested_today = False
+
+        return Invested_today
 
 
+
+
+    def buy_coins(self, drip_data):
+        """ Execute multiple buys for coin in coin list and its amount. """
+
+        plan = drip_data["plan"]
+
+        for coin in plan:
+            amount = plan[coin]
+        
+            print("Buy:", coin, amount)
+
+
+            
 
     def run(self):
         """ Runs drip. """
 
         # Check if its a new day, if True, execute trade.
-        is_NewDay = self.check_newDay()
+        invested_today = self.invested_today()
 
-        if is_NewDay == True:
-            
+        if invested_today == False:
+
             # Collect data
-            drip_data = utils.read_json(f"{os.path.dirname(__file__)}/drip_data.json")
-
+            drip_data = utils.read_json(self.drip_data_path)
+            time_now = utils.get_dates()[1].split(":")[0] # get first hour only
+            print(time_now)
             # If time is now, then invest
-            if drip_data["time"] == self.invest_time:
-                pass
-
+            if int(time_now) == self.invest_time:
+                print("time is golden")
 
                 if drip_data["already_invested"] != True:
-                    pass
+                    print("have not invested - lets invest now!")
 
+                    self.buy_coins(drip_data)
+
+                    self.set_dripData(key_name="already_invested", data=True)
+                    self.set_dripData(key_name="last_invested_date", data=utils.get_dates()[0])
 
 
 
@@ -103,7 +145,7 @@ class DripDrip():
 if __name__ == "__main__":
 
     DRIP = DripDrip()
-    DRIP.calculate_plan()   
+    DRIP.run()   
 
 
 
