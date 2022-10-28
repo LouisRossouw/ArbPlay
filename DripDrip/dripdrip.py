@@ -24,7 +24,7 @@ class DripDrip():
         self.days = self.SETTINGS.days
         self.amount_capital = 10000
         self.invest_time = self.SETTINGS.invest_time # first 2 digits of a digital watch.
-        self.drip_data_path = f"{os.path.dirname(os.path.abspath(__file__))}/drip_data.json"
+        self.drip_data_path = f"{os.path.dirname(os.path.abspath(__file__))}/data/drip_data.json"
 
         self.data = {
                         "XRP": 70,
@@ -134,8 +134,17 @@ class DripDrip():
 
 
             
-
     def run(self):
+        """ Runs drip. """
+        try:
+            self.run_algo()
+        except Exception as e:
+            print(e)
+            sleep(10)
+
+
+
+    def run_algo(self):
         """ Runs drip. """
 
         # Check if its a new day, if True, execute trade.
