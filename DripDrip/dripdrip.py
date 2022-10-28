@@ -20,9 +20,9 @@ class DripDrip():
         self.SETTINGS = Settings.Settings()
         self.VALR_EXCHANGE = VALR.Valr()
 
-        self.days = 25
+        self.days = self.SETTINGS.days
         self.amount_capital = 10000
-        self.invest_time = 23 # first 2 digits of a digital watch.
+        self.invest_time = self.SETTINGS.invest_time # first 2 digits of a digital watch.
         self.drip_data_path = f"{os.path.dirname(os.path.abspath(__file__))}/drip_data.json"
 
         self.data = {
