@@ -1,12 +1,13 @@
 {
-      "days_total": 21,
-      "day_count": 1,
+      "active": false,
+      "days_total": 10,
+      "day_count": 10,
       "total_value": 10000,
       "already_invested": true,
       "plan": {
-            "XRP": 460.5,
-            "BTC": 342.0,
-            "ADA": 132.4,
+            "XRP": 468.1,
+            "BTC": 332.0,
+            "ADA": 134.8,
             "SOL": 65.1
       },
       "last_invested_date": "2022-10-27"
