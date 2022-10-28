@@ -126,7 +126,7 @@ class DripDrip():
             amount_coins_buy = float(float(amount) / float(coin_askPrice))
             # round_down_coin_amount = utils.round_down_float(amount_coins_buy)
 
-            print("Buy:", coin + " - ", amount_coins_buy, "| R" + amount)
+            print("Buy:", str(coin) + " - ", str(amount_coins_buy), "| R" + str(amount))
             self.VALR_EXCHANGE.subAcc_BUY_ZAR_to_coin(amount_in_coins=amount_coins_buy, 
                                                       coin_pair=coin + "ZAR", 
                                                       sub_ID=acc_ID)
