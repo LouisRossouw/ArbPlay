@@ -1,8 +1,13 @@
-
+import math
 import json
 import datetime
 import calendar
 
+
+
+def round_down_float(value):
+    """ Rounds down a 2 decimal value to the lowest number. """
+    return math.floor(float(value) * 100)/100.0
 
 
 

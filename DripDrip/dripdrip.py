@@ -4,6 +4,7 @@ import random
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import Settings
 import toolUtils.utils as utils
 import Exchanges.valr_exchange as VALR
 
@@ -16,20 +17,20 @@ class DripDrip():
     def __init__(self):
         """ Initialize drip. """
 
-        VALR_EXCHANGE = VALR.Valr()
+        self.SETTINGS = Settings.Settings()
+        self.VALR_EXCHANGE = VALR.Valr()
 
-        self.days = 10
+        self.days = 21
         self.amount_capital = 10000
-        self.invest_time = 8 # first 2 digits of a digital watch.
+        self.invest_time = 21 # first 2 digits of a digital watch.
         self.drip_data_path = f"{os.path.dirname(__file__)}/drip_data.json"
 
         self.data = {
                         "XRP": 70,
                         "BTC": 50,
-                        "ADA": 20,
+                        "ETH": 20,
                         "SOL": 10,
                     }
-
 
 
 
@@ -52,11 +53,10 @@ class DripDrip():
 
 
 
-    def calculate_plan(self):
+    def calculate_plan(self, amount_capital):
         """ calculates the amount it must invest for each coin over the amount of days, 
-            and sets it in the data. 
-        """
-        
+            and sets it in the data. """
+
         my_data = self.data
 
         coins = []
@@ -70,13 +70,13 @@ class DripDrip():
 
         randomList = random.choices(coins, 
                                     weights=coin_values, 
-                                    k=self.amount_capital)
+                                    k=int(amount_capital))
             
         data = {}
         for i in coins:
 
             coin_amount = randomList.count(i)
-            data[i] = coin_amount / self.days
+            data[i] = utils.round_down_float(coin_amount / self.days)
 
         # Reset
         self.set_dripData(key_name="plan", data=data)
@@ -124,8 +124,10 @@ class DripDrip():
 
         # Check if its a new day, if True, execute trade.
         invested_today = self.invested_today()
-    
+        print("invested_today:", invested_today)
+
         if invested_today == False:
+
 
             active = self.get_dripData(key_name="active") 
 
@@ -161,6 +163,35 @@ class DripDrip():
                 # then check, once a day, if the zar balance is  >= R500
                 # if True, run the re-calculate function to set a new plan in place.
                 print("Not active - deposit ZAR to activate bot.")
+                enough_funds = self.check_ZAR()
+
+                if enough_funds[0] == True:
+                    self.calculate_plan(amount_capital=enough_funds[1])
+
+
+
+
+
+    def check_ZAR(self):
+        """ Checks if ZAR balance more than, 
+            if True then re-calculate a new plan."""
+
+        valr_sub_acc = self.SETTINGS.valr_DripDrip_acc_name
+        acc_ID = self.VALR_EXCHANGE.get_account_ID(acc_label=valr_sub_acc)
+
+        all_balances = self.VALR_EXCHANGE.get_balances(acc_ID=acc_ID, account_type="sub")
+        ZAR_balances = self.VALR_EXCHANGE.parse_balances(balances=all_balances, coin="ZAR")
+
+        enough_funds = False
+
+        if float(ZAR_balances) >= float(500):
+            enough_funds == True
+
+        print("enough_funds:", enough_funds, ZAR_balances)
+
+        return enough_funds, ZAR_balances
+
+
 
 
 

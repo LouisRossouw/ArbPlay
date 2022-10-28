@@ -35,3 +35,8 @@ class Settings():
         # Prices valuation
         self.percent_trigger = 1.7
         self.reverse_percent_trigger = 0.4
+
+
+# DripDrip - dollar cost avaraging bot.
+
+        self.valr_DripDrip_acc_name = "BOT-DRIP"

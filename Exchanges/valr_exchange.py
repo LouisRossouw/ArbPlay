@@ -154,6 +154,16 @@ class Valr():
 
 
 
+    def subAcc_BUY_ZAR_to_coin(self, amount_in_coins, coin_pair, sub_ID):
+        """ Buy Zar to coin. """
+
+        self.Valr_client.post_market_order(
+                            pair=str(coin_pair),
+                            side='BUY',
+                            base_amount= str(amount_in_coins),
+                            subaccount_id= sub_ID
+                            )
+
 
 if __name__ == "__main__":
 
