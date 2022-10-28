@@ -1,6 +1,7 @@
 import os
 import sys
 import random
+from time import sleep
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -112,15 +113,24 @@ class DripDrip():
         plan = drip_data["plan"]
 
         for coin in plan:
+
             amount = plan[coin]
         
-            print("Buy:", coin, amount)
             valr_sub_acc = self.SETTINGS.valr_DripDrip_acc_name
             acc_ID = self.VALR_EXCHANGE.get_account_ID(acc_label=valr_sub_acc)
 
-            self.VALR_EXCHANGE.subAcc_BUY_ZAR_to_coin(amount_in_coins=amount, 
+            market_data = self.VALR_EXCHANGE.Valr_client.get_market_summary()
+            coin_askPrice = self.VALR_EXCHANGE.return_coinPair_data(coinpair=coin+"ZAR", 
+                                                            market_data=market_data)["askPrice"]
+
+            amount_coins_buy = float(float(amount) / float(coin_askPrice))
+            # round_down_coin_amount = utils.round_down_float(amount_coins_buy)
+
+            print("Buy:", coin + " - ", amount_coins_buy, "| R" + amount)
+            self.VALR_EXCHANGE.subAcc_BUY_ZAR_to_coin(amount_in_coins=amount_coins_buy, 
                                                       coin_pair=coin + "ZAR", 
                                                       sub_ID=acc_ID)
+            sleep(5)
 
 
             
@@ -209,7 +219,13 @@ if __name__ == "__main__":
 
     print(f"{os.path.dirname(os.path.abspath(__file__))}/drip_data.json")   
 
+    # market_data = VALR.Valr().Valr_client.get_market_summary()
+    # coin_askPrice = VALR.Valr().return_coinPair_data(coinpair="XRP"+"ZAR", 
+    #                                                 market_data=market_data)["askPrice"]
 
+    # amount_coins_buy = float(float(100) / float(coin_askPrice))
+
+    # print(coin_askPrice, amount_coins_buy)
 
     # randomList = random.choices(self.sampleList, weights=self.weights, k=self.amount_capital)
     
