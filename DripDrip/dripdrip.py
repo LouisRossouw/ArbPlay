@@ -20,7 +20,7 @@ class DripDrip():
 
         self.days = 10
         self.amount_capital = 10000
-        self.invest_time = 23
+        self.invest_time = 8 # first 2 digits of a digital watch.
         self.drip_data_path = f"{os.path.dirname(__file__)}/drip_data.json"
 
         self.data = {
@@ -78,7 +78,13 @@ class DripDrip():
             coin_amount = randomList.count(i)
             data[i] = coin_amount / self.days
 
+        # Reset
         self.set_dripData(key_name="plan", data=data)
+        self.set_dripData(key_name="days_total", data=self.days)
+        self.set_dripData(key_name="day_count", data=0)
+        self.set_dripData(key_name="active", data=True)
+        self.set_dripData(key_name="already_invested", data=False)
+        self.set_dripData(key_name="last_invested_date", data="")
 
 
 
@@ -89,7 +95,6 @@ class DripDrip():
         # compare the last investment date with the date now.
         invested_date = self.get_dripData(key_name="last_invested_date")
         todays_date = utils.get_dates()[0]
-        
 
         if todays_date == invested_date:
             Invested_today = True
@@ -119,24 +124,43 @@ class DripDrip():
 
         # Check if its a new day, if True, execute trade.
         invested_today = self.invested_today()
-
+    
         if invested_today == False:
 
-            # Collect data
-            drip_data = utils.read_json(self.drip_data_path)
-            time_now = utils.get_dates()[1].split(":")[0] # get first hour only
-            print(time_now)
-            # If time is now, then invest
-            if int(time_now) == self.invest_time:
-                print("time is golden")
+            active = self.get_dripData(key_name="active") 
 
-                if drip_data["already_invested"] != True:
-                    print("have not invested - lets invest now!")
+            # if have not reached total days investing, then buy.
+            if active != False:
 
-                    self.buy_coins(drip_data)
+                # Collect data
+                drip_data = utils.read_json(self.drip_data_path)
+                time_now = utils.get_dates()[1].split(":")[0] # get first hour only
+                print(time_now)
+                # If time is now, then invest
+                if int(time_now) == self.invest_time:
+                    print("time is golden")
 
-                    self.set_dripData(key_name="already_invested", data=True)
-                    self.set_dripData(key_name="last_invested_date", data=utils.get_dates()[0])
+                    if drip_data["already_invested"] != True:
+                        print("have not invested - lets invest now!")
+
+                        self.buy_coins(drip_data)
+
+                        day_count = int(self.get_dripData(key_name="day_count"))
+
+                        self.set_dripData(key_name="already_invested", data=True)
+                        self.set_dripData(key_name="last_invested_date", data=utils.get_dates()[0])
+                        self.set_dripData(key_name="day_count", data=day_count + 1)
+
+                        total_days = self.get_dripData(key_name="days_total")
+
+                        if int(day_count + 1) == int(total_days):
+                            print("Done")
+                            self.set_dripData(key_name="active", data=False)      
+            else:
+                # Else if have reached goal
+                # then check, once a day, if the zar balance is  >= R500
+                # if True, run the re-calculate function to set a new plan in place.
+                print("Not active - deposit ZAR to activate bot.")
 
 
 
