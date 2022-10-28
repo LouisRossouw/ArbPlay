@@ -20,10 +20,10 @@ class DripDrip():
         self.SETTINGS = Settings.Settings()
         self.VALR_EXCHANGE = VALR.Valr()
 
-        self.days = 21
+        self.days = 25
         self.amount_capital = 10000
-        self.invest_time = 21 # first 2 digits of a digital watch.
-        self.drip_data_path = f"{os.path.dirname(__file__)}/drip_data.json"
+        self.invest_time = 23 # first 2 digits of a digital watch.
+        self.drip_data_path = f"{os.path.dirname(os.path.abspath(__file__))}/drip_data.json"
 
         self.data = {
                         "XRP": 70,
@@ -115,6 +115,12 @@ class DripDrip():
             amount = plan[coin]
         
             print("Buy:", coin, amount)
+            valr_sub_acc = self.SETTINGS.valr_DripDrip_acc_name
+            acc_ID = self.VALR_EXCHANGE.get_account_ID(acc_label=valr_sub_acc)
+
+            self.VALR_EXCHANGE.subAcc_BUY_ZAR_to_coin(amount_in_coins=amount, 
+                                                      coin_pair=coin + "ZAR", 
+                                                      sub_ID=acc_ID)
 
 
             
@@ -137,7 +143,7 @@ class DripDrip():
                 # Collect data
                 drip_data = utils.read_json(self.drip_data_path)
                 time_now = utils.get_dates()[1].split(":")[0] # get first hour only
-                print(time_now)
+
                 # If time is now, then invest
                 if int(time_now) == self.invest_time:
                     print("time is golden")
@@ -181,11 +187,10 @@ class DripDrip():
 
         all_balances = self.VALR_EXCHANGE.get_balances(acc_ID=acc_ID, account_type="sub")
         ZAR_balances = self.VALR_EXCHANGE.parse_balances(balances=all_balances, coin="ZAR")
-
         enough_funds = False
 
         if float(ZAR_balances) >= float(500):
-            enough_funds == True
+            enough_funds = True
 
         print("enough_funds:", enough_funds, ZAR_balances)
 
@@ -200,7 +205,9 @@ class DripDrip():
 if __name__ == "__main__":
 
     DRIP = DripDrip()
-    DRIP.run()   
+    DRIP.run()
+
+    print(f"{os.path.dirname(os.path.abspath(__file__))}/drip_data.json")   
 
 
 

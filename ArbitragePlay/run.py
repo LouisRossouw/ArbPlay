@@ -1,6 +1,10 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from time import sleep
 
-# from algo_play import Algo_play
 from arbMain import AlgoMain
 
 
@@ -8,32 +12,20 @@ from arbMain import AlgoMain
 def run():
     """ Runs the main app loop. """
 
-    time_delay = 8
-
     Aarbitrage_play = AlgoMain()
+    print("---")
+    
+    try:
+        Aarbitrage_play.run()
+    except Exception as e:
+        print(e)
+        sleep(10)
 
-
-    while True:
-
-        print("---")
-        
-        try:
-            Aarbitrage_play.run()
-        except Exception as e:
-            print(e)
-            sleep(10)
-
-
-        print("---")
-        sleep(time_delay)
-
-
-
-
-
+    print("---")
 
 
 
 
 if __name__ == "__main__":
     run()
+
