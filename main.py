@@ -12,6 +12,7 @@ while True:
     ArbitragePlay.run()
 
     # Dollar cost avaraging in valr.
+    print("\nDrip:")
     Drip.run()
 
 
