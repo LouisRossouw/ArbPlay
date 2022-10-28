@@ -70,7 +70,7 @@ class DripDrip():
 
         randomList = random.choices(coins, 
                                     weights=coin_values, 
-                                    k=int(amount_capital))
+                                    k=int(float(amount_capital)))
             
         data = {}
         for i in coins:
