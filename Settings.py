@@ -39,6 +39,6 @@ class Settings():
 
 # DripDrip - dollar cost avaraging bot.
 
-        self.days = 25
+        self.days = 20
         self.invest_time = 23
         self.valr_DripDrip_acc_name = "BOT-DRIP"

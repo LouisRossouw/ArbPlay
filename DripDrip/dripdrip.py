@@ -29,7 +29,7 @@ class DripDrip():
         self.data = {
                         "XRP": 70,
                         "BTC": 50,
-                        "ETH": 20,
+                        "ETH": 30,
                         "SOL": 10,
                     }
 
@@ -220,10 +220,10 @@ if __name__ == "__main__":
     print(f"{os.path.dirname(os.path.abspath(__file__))}/drip_data.json")   
 
     # market_data = VALR.Valr().Valr_client.get_market_summary()
-    # coin_askPrice = VALR.Valr().return_coinPair_data(coinpair="XRP"+"ZAR", 
+    # coin_askPrice = VALR.Valr().return_coinPair_data(coinpair="ETH"+"ZAR", 
     #                                                 market_data=market_data)["askPrice"]
 
-    # amount_coins_buy = float(float(100) / float(coin_askPrice))
+    # amount_coins_buy = float(float(30) / float(coin_askPrice))
 
     # print(coin_askPrice, amount_coins_buy)
 
