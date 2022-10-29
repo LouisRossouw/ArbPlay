@@ -4,16 +4,23 @@ import logging
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-class loglog():
+import Settings as SETTINGS
+
+class LogLog():
+
 
     def __init__(self):
 
-        # create logger
-        self.logger = logging.getLogger("test")
-        self.logger.setLevel(logging.DEBUG)
+
+        self.SETTINGS = SETTINGS.Settings()
+
+
+
+
+    def _logHandlers(self, LOGPATH):
 
         # create file handler which logs even debug messages
-        fh = logging.FileHandler('dev.log')
+        fh = logging.FileHandler(LOGPATH)
         fh.setLevel(logging.DEBUG)
 
         # create console handler with a higher log level
@@ -29,8 +36,41 @@ class loglog():
         self.logger.addHandler(fh)
         self.logger.addHandler(ch)
 
-        self.logger.disabled = False
 
+
+
+    def DripLog(self):
+
+        LOGNAME = "DripLog"
+        LOGPATH = "logs/DripLogs.log"
+
+        # create logger
+        self.logger = logging.getLogger(LOGNAME)
+        self.logger.setLevel(logging.DEBUG)
+
+        self._logHandlers(LOGPATH)
+
+        self.logger.disabled = self.SETTINGS.logger_disabled
+
+        return self.logger
+
+
+
+
+    def ArbitrageLog(self):
+
+        LOGNAME = "ArbitrageLog"
+        LOGPATH = "logs/ArbitrageLogs.log"
+
+        # create logger
+        self.logger = logging.getLogger(LOGNAME)
+        self.logger.setLevel(logging.DEBUG)
+
+        self._logHandlers(LOGPATH)
+
+        self.logger.disabled = self.SETTINGS.logger_disabled
+
+        return self.logger
 
 
 
@@ -38,8 +78,16 @@ class loglog():
 
 if __name__ == "__main__":
 
-    log = loglog()
+    log = LogLog()
 
-    log.logger.info("testii")
-    log.logger.error("o no")
+    Driplog = log.DripLog()
+    Driplog.error("hi")
+    
+    ArbitrageLog = log.ArbitrageLog()
+    ArbitrageLog.info("arbitrageyay")
+
+    try:
+        os.ls(path)
+    except Exception as e:
+        Driplog.error(e)  
 
