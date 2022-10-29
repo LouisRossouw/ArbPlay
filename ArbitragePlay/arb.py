@@ -24,7 +24,7 @@ class Algo_arbitrage():
         self.valr = Valr()
         self.SETTINGS = Settings()
         self.DATA_LOG = Data_log()
-
+        self.LOGLOG = LOG.LogLog().ArbitrageLog()
 
 
 
@@ -97,7 +97,7 @@ class Algo_arbitrage():
     def _buy_coins(self, coin, coin_pairs, USDT_balance):
         """ Buy order of specific coins. and while loop until coins arive."""
 
-        LOG.ArbitrageLog.info(f"Kucoin - Buying coins: {str(coin)}|pairs:{str(coin_pairs)}|USDT:{str(USDT_balance)}")
+        self.LOGLOG.info(f"Kucoin - Buying coins: {str(coin)}|pairs:{str(coin_pairs)}|USDT:{str(USDT_balance)}")
         self.kucoin.buy_coin(coin_pair=coin_pairs, amount_in_USDT=USDT_balance)
         KUCOIN_Funds_ready = self._wait_for_funds_KUCOIN(coin, acc_type="trade")
         
@@ -109,7 +109,7 @@ class Algo_arbitrage():
     def _execute_withdraw(self, coin):
         """ PT of: execute_trade 2. : Execute Withdraw procedure. """
 
-        LOG.ArbitrageLog.info(f"Kucoin - Attempting Withdraw: {str(coin)}")
+        self.LOGLOG.info(f"Kucoin - Attempting Withdraw: {str(coin)}")
 
         try:
 
@@ -148,7 +148,7 @@ class Algo_arbitrage():
 
         except Exception as e:
             print("Withdraw failed ", print(e))
-            LOG.ArbitrageLog.error(e)
+            self.LOGLOG.error(e)
             is_withdrawn = False
 
         return is_withdrawn
@@ -159,7 +159,7 @@ class Algo_arbitrage():
     def _check_valr_funds(self, is_withdrawn, coin):
         """ After Kucoin has withdrawn, wait and check that it has arrived in Valr. """
 
-        LOG.ArbitrageLog.info(f"Valr - Checking funds: {str(coin)}")
+        self.LOGLOG.info(f"Valr - Checking funds: {str(coin)}")
 
         if is_withdrawn != False:
             VALR_Funds_ready = self._wait_for_funds_VALR(coin)
@@ -168,7 +168,7 @@ class Algo_arbitrage():
 
         if VALR_Funds_ready == True:
             print("Funds have arived on valr: ", coin)
-            LOG.ArbitrageLog.info(f"Valr - Funds arived on Valr: {str(coin)}")
+            self.LOGLOG.info(f"Valr - Funds arived on Valr: {str(coin)}")
 
         return VALR_Funds_ready
 
@@ -183,7 +183,7 @@ class Algo_arbitrage():
         balances = self.valr.Valr_get_balances(type="main")
         available = balances[coin]["available"]
 
-        LOG.ArbitrageLog.info(f"Valr - Selling: {str(coin)} to ZAR = {str(available)}")
+        self.LOGLOG.info(f"Valr - Selling: {str(coin)} to ZAR = {str(available)}")
         self.valr.SELL_coin_to_ZAR(amount_in_coins=available, 
                                    coin_pair=coin + "ZAR")
 
@@ -198,13 +198,13 @@ class Algo_arbitrage():
             sleep(3)
             
             if float(ZAR_balance) >= float(500):
-                LOG.ArbitrageLog.info(f"Sold = True | R{str(ZAR_balance)}")
+                self.LOGLOG.info(f"Sold = True | R{str(ZAR_balance)}")
                 break
 
         # Set system to reverse arbitrage - we need to get the funds back to Kucoin at the cheapest cost.
         self.DATA_LOG.set_data(key_name="position", data="reverse_arbitrage")
         self.DATA_LOG.set_data(key_name="ZAR_funds", data=ZAR_balance)
-        LOG.ArbitrageLog.info(f"Setting data: position=reverse_arbitrage")
+        self.LOGLOG.info(f"Setting data: position=reverse_arbitrage")
         sleep(10)
 
 
