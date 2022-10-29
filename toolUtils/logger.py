@@ -87,7 +87,7 @@ if __name__ == "__main__":
     ArbitrageLog.info("arbitrageyay")
 
     try:
-        os.ls(path)
+        print("test")
     except Exception as e:
         Driplog.error(e)  
 
