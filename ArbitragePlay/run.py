@@ -10,20 +10,20 @@ import toolUtils.logger as LOG
 
 
 logger = LOG.LogLog().DripLog()
+Aarbitrage_play = AlgoMain()
 
 def run():
     """ Runs the main app loop. """
 
-    Aarbitrage_play = AlgoMain()
     print("---")
-    
+
     try:
         Aarbitrage_play.run()
     except Exception as e:
         print(e)
         logger.error(e)
         sleep(10)
-
+        
     print("---")
 
 
