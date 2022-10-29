@@ -1,4 +1,3 @@
-from re import S
 from time import sleep
 
 import DripDrip.dripdrip as DP
@@ -19,7 +18,6 @@ while True:
     if settings.Drip_active == True:
         print("\nDrip:")
         Drip.run()
-
 
     sleep(8)
 

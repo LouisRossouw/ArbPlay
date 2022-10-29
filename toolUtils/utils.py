@@ -78,14 +78,14 @@ def get_dates():
 if __name__ == "__main__":
 
 
-    CHECK_get_percentage_difference = False
+    CHECK_get_percentage_difference = True
     CHECK_percent_increase = False
-    GET_DATES = True
+    GET_DATES = False
     # 1.2%
 
     if CHECK_get_percentage_difference == True:
         # buy on Kucoin / sell on Valr ("sell_valr", "ask_kucoin")
-        print(get_percentage_difference(1981.5, 1957.88))
+        print(get_percentage_difference(8.64, 8.75))
 
     if CHECK_percent_increase == True:
         print(percent_increase(1.7, 50000))

@@ -11,6 +11,7 @@ class Settings():
         self.Title = "ArbPlay"
         self.play_money = 10000
         self.print_statements = True
+        self.logger_disabled = False
 
         # Kucoin
         self.trade_account = "trade"       # use either "trade" or "main" accounts
@@ -44,3 +45,9 @@ class Settings():
         self.days = 20
         self.invest_time = 20 # 8pm
         self.valr_DripDrip_acc_name = "BOT-DRIP"
+        self.drip_invest = {
+                            "XRP": 70,
+                            "BTC": 50,
+                            "ETH": 30,
+                            "SOL": 10,
+                           }
