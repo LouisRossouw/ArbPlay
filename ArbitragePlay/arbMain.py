@@ -14,6 +14,7 @@ from Exchanges.valr_exchange import Valr
 from arb import Algo_arbitrage
 from arb_reverse import Algo_arbitrage_reverse
 
+import toolUtils.logger as LOG
 
 
 class AlgoMain():
@@ -40,6 +41,7 @@ class AlgoMain():
         self.KUCOIN_COINPAIR = ["ETH-USDC", "BTC-USDC", "XRP-USDC", 
                                 "BNB-USDC", "SOL-USDC", "AVAX-USDC", "SHIB-USDC"]
 
+        LOG.ArbitrageLog.info("ArbitragePlay Initiliazed")
 
 
 
@@ -148,11 +150,17 @@ class AlgoMain():
                                                     accounts=accounts, 
                                                     account_type="trade")["balance"]
 
-            print("KUCOIN - selling: ", amount_coins)
+            stdout_txt = f"KUCOIN - selling: {str(amount_coins)}|VR:{str(VLRrcn_pr)}|KC:{str(KCcn_pr)}|{str(prcnt)}%"
+
+            print(stdout_txt)
+            LOG.ArbitrageLog.info(stdout_txt)
+
             self.kucoin.sell_coin(coin+"-USDT", amount_in_coins=amount_coins)
 
             self.DATA_LOG.set_data(key_name="position", data="arbitrage") 
             self.DATA_LOG.set_data(key_name="rebalancing", data=False)
+
+            LOG.ArbitrageLog.info("Setting Data: position=arbitrage | rebalancing=False")
 
 
 
