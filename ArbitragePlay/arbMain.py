@@ -28,6 +28,7 @@ class AlgoMain():
         self.valr = Valr()
         self.SETTINGS = Settings()
         self.DATA_LOG = Data_log()
+        self.LOGLOG = LOG.LogLog().ArbitrageLog()
 
         self.Algo_arbitrage = Algo_arbitrage()
         self.Algo_arbitrage_reverse = Algo_arbitrage_reverse()
@@ -41,7 +42,7 @@ class AlgoMain():
         self.KUCOIN_COINPAIR = ["ETH-USDC", "BTC-USDC", "XRP-USDC", 
                                 "BNB-USDC", "SOL-USDC", "AVAX-USDC", "SHIB-USDC"]
 
-        LOG.ArbitrageLog.info("ArbitragePlay Initiliazed")
+        self.LOGLOG.info("ArbitragePlay Initiliazed")
 
 
 
@@ -153,14 +154,14 @@ class AlgoMain():
             stdout_txt = f"KUCOIN - selling: {str(amount_coins)}|VR:{str(VLRrcn_pr)}|KC:{str(KCcn_pr)}|{str(prcnt)}%"
 
             print(stdout_txt)
-            LOG.ArbitrageLog.info(stdout_txt)
+            self.LOGLOG.info(stdout_txt)
 
             self.kucoin.sell_coin(coin+"-USDT", amount_in_coins=amount_coins)
 
             self.DATA_LOG.set_data(key_name="position", data="arbitrage") 
             self.DATA_LOG.set_data(key_name="rebalancing", data=False)
 
-            LOG.ArbitrageLog.info("Setting Data: position=arbitrage | rebalancing=False")
+            self.LOGLOG.info("Setting Data: position=arbitrage | rebalancing=False")
 
 
 
