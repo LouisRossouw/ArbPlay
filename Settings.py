@@ -28,6 +28,7 @@ class Settings():
 
 # ArbitragePlay.
 
+        self.arb_active = True
         self.force_signal = False, "XRP"     # Run tests on specific coin.
         self.position = "reverse_arbitrage"  # "arbitrage" or "reverse_arbitrage" 
                                              # If the funds are on kucoin, this should be set to arbitrage to signal we need to send the funds to Valr
@@ -39,6 +40,7 @@ class Settings():
 
 # DripDrip - dollar cost avaraging bot.
 
+        self.Drip_active = True
         self.days = 20
         self.invest_time = 20 # 8pm
         self.valr_DripDrip_acc_name = "BOT-DRIP"
