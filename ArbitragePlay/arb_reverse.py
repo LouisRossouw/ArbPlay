@@ -29,6 +29,7 @@ class Algo_arbitrage_reverse():
         
         self.SETTINGS = Settings()
         self.DATA_LOG = Data_log()
+        self.LOGLOG = LOG.LogLog().ArbitrageLog()
 
 
 
@@ -63,7 +64,7 @@ class Algo_arbitrage_reverse():
         """ If enough ZAR exists, then buy coins. """
 
         print("VALR - BUY ", coin, " R", ZAR_balance)
-        LOG.ArbitrageLog.info(f"VALR - BUY: {str(coin)} R{str(ZAR_balance)}")
+        self.LOGLOG.info(f"VALR - BUY: {str(coin)} R{str(ZAR_balance)}")
 
         # Get coins askPrice to store in data for later.
         market_data = self.valr.Valr_client.get_market_summary()
@@ -84,7 +85,7 @@ class Algo_arbitrage_reverse():
     def _wait_for_coins(self, coin):
         """ after buying coins, wait / make sure it exists before proceeding. """
 
-        LOG.ArbitrageLog.info(f"VALR - Waiting: {str(coin)}")
+        self.LOGLOG.info(f"VALR - Waiting: {str(coin)}")
 
         while True:
             COIN_balance = self.valr.Valr_get_balances(type="main")[coin]["available"]
@@ -132,8 +133,8 @@ class Algo_arbitrage_reverse():
 
             print("VALR - Withdrawing ", round_amount, kucoin_address)
             print("to KUCOIN - ", kucoin_address, kucoin_memo, kucoin_chain)
-            LOG.ArbitrageLog.info(f"VALR - WITHDRAWING: {str(coin)}|bal:{str(round_amount)}")
-            LOG.ArbitrageLog.info(f"To Kucoin: {str(kucoin_address)}|chain:{str(kucoin_chain)}")
+            self.LOGLOG.info(f"VALR - WITHDRAWING: {str(coin)}|bal:{str(round_amount)}")
+            self.LOGLOG.info(f"To Kucoin: {str(kucoin_address)}|chain:{str(kucoin_chain)}")
 
             try:
                 self.valr.Valr_client.post_crypto_withdrawal(currency_code=coin, 
@@ -142,10 +143,10 @@ class Algo_arbitrage_reverse():
                                                                 payment_reference=kucoin_memo
                                                                 )
                 executed = True
-                LOG.ArbitrageLog.info("Success")
+                self.LOGLOG.info("Success")
             except Exception as e:
                 print("WithDraw Failed")
-                LOG.ArbitrageLog.error(e)
+                self.LOGLOG.error(e)
                 executed = False
         
         return executed
@@ -164,7 +165,7 @@ class Algo_arbitrage_reverse():
                                                 account_type="main")
 
         coin_balance = coin_account["balance"]
-        LOG.ArbitrageLog.info(f"KUCOIN - Selling to USDT: {str(coin)}|Bal{str(coin_balance)}")
+        self.LOGLOG.info(f"KUCOIN - Selling to USDT: {str(coin)}|Bal{str(coin_balance)}")
 
         # transfer to trade account to sell.
         self.kucoin.inner_transfer(coin=coin, 
