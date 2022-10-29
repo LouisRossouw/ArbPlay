@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import Settings
 import toolUtils.utils as utils
+import toolUtils.logger as LOG
 import Exchanges.valr_exchange as VALR
 
 
@@ -20,18 +21,17 @@ class DripDrip():
 
         self.SETTINGS = Settings.Settings()
         self.VALR_EXCHANGE = VALR.Valr()
+        self.LOGLOG = LOG.LogLog().DripLog()
 
         self.days = self.SETTINGS.days
-        self.amount_capital = 10000
         self.invest_time = self.SETTINGS.invest_time # first 2 digits of a digital watch.
         self.drip_data_path = f"{os.path.dirname(os.path.abspath(__file__))}/data/drip_data.json"
 
-        self.data = {
-                        "XRP": 70,
-                        "BTC": 50,
-                        "ETH": 30,
-                        "SOL": 10,
-                    }
+        self.data = self.SETTINGS.drip_invest
+
+        self.LOGLOG.info("Drip Initialized.")
+
+
 
 
 
@@ -58,6 +58,8 @@ class DripDrip():
         """ calculates the amount it must invest for each coin over the amount of days, 
             and sets it in the data. """
 
+        self.LOGLOG.info(f"adding new Calculated plan:")
+
         my_data = self.data
 
         coins = []
@@ -72,20 +74,19 @@ class DripDrip():
         randomList = random.choices(coins, 
                                     weights=coin_values, 
                                     k=int(float(amount_capital)))
-            
+
         data = {}
         for i in coins:
 
             coin_amount = randomList.count(i)
-            data[i] = utils.round_down_float(coin_amount / self.days)
+            round_down = utils.round_down_float(coin_amount / self.days)
+            data[i] = round_down
+
+            self.LOGLOG.info(f"{i}: {str(round_down)}")
 
         # Reset
-        self.set_dripData(key_name="plan", data=data)
-        self.set_dripData(key_name="days_total", data=self.days)
-        self.set_dripData(key_name="day_count", data=0)
-        self.set_dripData(key_name="active", data=True)
-        self.set_dripData(key_name="already_invested", data=False)
-        self.set_dripData(key_name="last_invested_date", data="")
+        self._set_CALCULATE_data(data=data)
+
 
 
 
@@ -101,6 +102,7 @@ class DripDrip():
             Invested_today = True
         else:
             Invested_today = False
+            self.set_dripData(key_name="already_invested", data=False)
 
         return Invested_today
 
@@ -121,26 +123,32 @@ class DripDrip():
 
             market_data = self.VALR_EXCHANGE.Valr_client.get_market_summary()
             coin_askPrice = self.VALR_EXCHANGE.return_coinPair_data(coinpair=coin+"ZAR", 
-                                                            market_data=market_data)["askPrice"]
+                                                                    market_data=market_data)["askPrice"]
 
             amount_coins_buy = float(float(amount) / float(coin_askPrice))
             # round_down_coin_amount = utils.round_down_float(amount_coins_buy)
 
+            self.LOGLOG.info(f"Buy: {str(coin)} - {str(amount_coins_buy)} | R {str(amount)}")
             print("Buy:", str(coin) + " - ", str(amount_coins_buy), "| R" + str(amount))
+
             self.VALR_EXCHANGE.subAcc_BUY_ZAR_to_coin(amount_in_coins=amount_coins_buy, 
                                                       coin_pair=coin + "ZAR", 
                                                       sub_ID=acc_ID)
             sleep(5)
 
 
-            
+
+
     def run(self):
         """ Runs drip. """
+
         try:
             self.run_algo()
         except Exception as e:
             print(e)
+            self.LOGLOG.error(e)
             sleep(10)
+
 
 
 
@@ -152,8 +160,6 @@ class DripDrip():
         print("invested_today:", invested_today)
 
         if invested_today == False:
-
-
             active = self.get_dripData(key_name="active") 
 
             # if have not reached total days investing, then buy.
@@ -169,6 +175,7 @@ class DripDrip():
 
                     if drip_data["already_invested"] != True:
                         print("have not invested - lets invest now!")
+                        self.LOGLOG.info("Buying coins.")
 
                         self.buy_coins(drip_data)
 
@@ -182,17 +189,15 @@ class DripDrip():
 
                         if int(day_count + 1) == int(total_days):
                             print("Done")
+
+                            self.LOGLOG.info(f"Completed Drip: {str(day_count + 1)} / {str(total_days)}")
                             self.set_dripData(key_name="active", data=False)      
             else:
-                # Else if have reached goal
-                # then check, once a day, if the zar balance is  >= R500
-                # if True, run the re-calculate function to set a new plan in place.
                 print("Not active - deposit ZAR to activate bot.")
                 enough_funds = self.check_ZAR()
 
                 if enough_funds[0] == True:
                     self.calculate_plan(amount_capital=enough_funds[1])
-
 
 
 
@@ -218,6 +223,19 @@ class DripDrip():
 
 
 
+    def _set_CALCULATE_data(self, data):
+        """ Sets the data for calculate_plan func. """
+
+        # Reset
+        self.set_dripData(key_name="plan", data=data)
+        self.set_dripData(key_name="days_total", data=self.days)
+        self.set_dripData(key_name="day_count", data=0)
+        self.set_dripData(key_name="active", data=True)
+        self.set_dripData(key_name="already_invested", data=False)
+        self.set_dripData(key_name="last_invested_date", data="")
+
+
+
 
 
 
@@ -226,46 +244,4 @@ if __name__ == "__main__":
     DRIP = DripDrip()
     DRIP.run()
 
-    print(f"{os.path.dirname(os.path.abspath(__file__))}/drip_data.json")   
 
-    # market_data = VALR.Valr().Valr_client.get_market_summary()
-    # coin_askPrice = VALR.Valr().return_coinPair_data(coinpair="ETH"+"ZAR", 
-    #                                                 market_data=market_data)["askPrice"]
-
-    # amount_coins_buy = float(float(30) / float(coin_askPrice))
-
-    # print(coin_askPrice, amount_coins_buy)
-
-    # randomList = random.choices(self.sampleList, weights=self.weights, k=self.amount_capital)
-    
-    # xrp_count = randomList.count("XRP")
-    # btc_count = randomList.count("BTC")
-    # ada_count = randomList.count("ADA")
-    # sol_count = randomList.count("SOL")
-
-    # days_amount = xrp_count / self.days, btc_count / self.days, ada_count / self.days, sol_count / self.days
-
-    # xrp = days_amount[0]
-    # btc = days_amount[1]
-    # ada = days_amount[2]
-    # sol = days_amount[3]
-
-    # x = 0
-    # b = 0
-    # a = 0
-    # s = 0
-
-    # print("Run --", days_amount, "\n")
-
-    # for i in range(1, self.days + 1):
-        
-    #     x += xrp
-    #     b += btc
-    #     a += ada
-    #     s += sol
-
-    #     print("Day:",i , round(x,2), round(b,2), round(a,2), round(s,2))
-
-
-    # print("\nTotal -----", x, b, a, s)
-    # print("=", x + b + a + s)
