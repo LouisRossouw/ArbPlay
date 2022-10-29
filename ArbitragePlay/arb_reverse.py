@@ -13,6 +13,9 @@ from Settings import Settings
 from Exchanges.kucoin_exchange import Kucoin
 from Exchanges.valr_exchange import Valr
 
+import toolUtils.logger as LOG
+
+
 
 class Algo_arbitrage_reverse():
     """ A class to store all the settings for algo play. """
@@ -60,6 +63,7 @@ class Algo_arbitrage_reverse():
         """ If enough ZAR exists, then buy coins. """
 
         print("VALR - BUY ", coin, " R", ZAR_balance)
+        LOG.ArbitrageLog.info(f"VALR - BUY: {str(coin)} R{str(ZAR_balance)}")
 
         # Get coins askPrice to store in data for later.
         market_data = self.valr.Valr_client.get_market_summary()
@@ -79,6 +83,8 @@ class Algo_arbitrage_reverse():
 
     def _wait_for_coins(self, coin):
         """ after buying coins, wait / make sure it exists before proceeding. """
+
+        LOG.ArbitrageLog.info(f"VALR - Waiting: {str(coin)}")
 
         while True:
             COIN_balance = self.valr.Valr_get_balances(type="main")[coin]["available"]
@@ -111,6 +117,7 @@ class Algo_arbitrage_reverse():
         """ Withdraw coin from valr to Kucoin address. """
 
         print("VALR - WITHDRAW to Kucoin ", coin)
+
         executed = False
         # return kucoin wallet address for coin
         kucoin_coin_wallet_data = self.kucoin.get_deposit_address(coin=coin)
@@ -125,13 +132,21 @@ class Algo_arbitrage_reverse():
 
             print("VALR - Withdrawing ", round_amount, kucoin_address)
             print("to KUCOIN - ", kucoin_address, kucoin_memo, kucoin_chain)
+            LOG.ArbitrageLog.info(f"VALR - WITHDRAWING: {str(coin)}|bal:{str(round_amount)}")
+            LOG.ArbitrageLog.info(f"To Kucoin: {str(kucoin_address)}|chain:{str(kucoin_chain)}")
 
-            pay = self.valr.Valr_client.post_crypto_withdrawal(currency_code=coin, 
-                                                            amount=round_amount,
-                                                            address=kucoin_address,
-                                                            payment_reference=kucoin_memo
-                                                            )
-            executed = True
+            try:
+                self.valr.Valr_client.post_crypto_withdrawal(currency_code=coin, 
+                                                                amount=round_amount,
+                                                                address=kucoin_address,
+                                                                payment_reference=kucoin_memo
+                                                                )
+                executed = True
+                LOG.ArbitrageLog.info("Success")
+            except Exception as e:
+                print("WithDraw Failed")
+                LOG.ArbitrageLog.error(e)
+                executed = False
         
         return executed
 
@@ -142,12 +157,14 @@ class Algo_arbitrage_reverse():
         """ Transfer coins from main to trade account to be ready to sell. """
 
         print("KUCOIN - Selling to USDT.")
+
         all_accounts = self.kucoin.client.get_accounts()
         coin_account = self.kucoin.get_account(coin=coin, 
                                                 accounts=all_accounts, 
                                                 account_type="main")
 
         coin_balance = coin_account["balance"]
+        LOG.ArbitrageLog.info(f"KUCOIN - Selling to USDT: {str(coin)}|Bal{str(coin_balance)}")
 
         # transfer to trade account to sell.
         self.kucoin.inner_transfer(coin=coin, 
@@ -156,51 +173,6 @@ class Algo_arbitrage_reverse():
                                    amount_coins=coin_balance)
 
         return True
-
-
-
-
-    def SELL_coin_rebalance(self, coin):
-        """ Wait for original coin price to == the current coin zar price on Kucoin to 
-            make the sale, then the transfer is over and the aritrage cycle starts over.
-        """
-        while True:
-            sleep(5)
-            print("--")
-
-            valr_coin_askPrice = self.DATA_LOG.return_data("valr_coin_askPrice")
-
-            fiat_prices = self.kucoin.get_fiat_price_for_coin(fiat="ZAR")
-            kucoin_coin_value = fiat_prices[coin]
-
-            percentage_difference = utils.get_percentage_difference(kucoin_coin_value, 
-                                                                    valr_coin_askPrice)
-            valr_coin_amount = self.DATA_LOG.return_data("valr_coin_amount")
-
-            current = float(valr_coin_amount) * float(kucoin_coin_value)
-            valr_cur = float(valr_coin_amount) * float(valr_coin_askPrice)
-
-            # for print statements.
-            VLRrcn_pr = str(round(float(valr_coin_askPrice),2))
-            KCcn_pr = str(round(float(kucoin_coin_value),2))
-            prcnt = str(round(float(percentage_difference),2))
-            crnt = str(round(float(current),2))  
-            vlr_cnnt = str(round(float(valr_cur),2)) 
-
-            print("KUCOIN - Waiting to sell: ","R"+str(VLRrcn_pr), KCcn_pr, prcnt+"%", "R"+str(crnt), " R"+str(vlr_cnnt))
-
-            if float(kucoin_coin_value) >= float(valr_coin_askPrice):
-
-                accounts = self.kucoin.client.get_accounts()
-                amount_coins = self.kucoin.get_account(coin=coin, 
-                                                       accounts=accounts, 
-                                                       account_type="trade")["balance"]
-
-                print("KUCOIN - selling: ", amount_coins)
-                self.kucoin.sell_coin(coin+"-USDT", amount_in_coins=amount_coins)
-
-                self.DATA_LOG.set_data(key_name="position", data="arbitrage")
-                self.DATA_LOG.set_data(key_name="rebalancing", data=True)
 
 
 
