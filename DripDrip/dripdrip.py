@@ -226,10 +226,12 @@ class DripDrip():
 
                 # Collect data
                 drip_data = utils.read_json(self.drip_data_path)
+                get_random_invest_time = self.get_dripData(key_name="random_invest_time")
+
                 time_now = utils.get_dates()[1].split(":")[0] # get first hour only
 
                 # If time is now, then invest
-                if int(time_now) == self.invest_time:
+                if int(time_now) == get_random_invest_time:
                     print("time is golden")
 
                     if drip_data["already_invested"] != True:
@@ -243,6 +245,7 @@ class DripDrip():
                         self.set_dripData(key_name="already_invested", data=True)
                         self.set_dripData(key_name="last_invested_date", data=utils.get_dates()[0])
                         self.set_dripData(key_name="day_count", data=day_count + 1)
+                        self.set_dripData(key_name="random_invest_time", data=self.random_invest_time())
 
                         total_days = self.get_dripData(key_name="days_total")
 
@@ -257,6 +260,17 @@ class DripDrip():
 
                 if enough_funds[0] == True:
                     self.calculate_plan(amount_capital=enough_funds[1])
+
+
+
+
+    def random_invest_time(self):
+        """ Randomly pick a time to invest. """
+
+        numbers = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+        chosen = random.choice(numbers)
+
+        return chosen
 
 
 
@@ -302,6 +316,8 @@ if __name__ == "__main__":
 
     DRIP = DripDrip()
     # DRIP.calculate_plan(5000)
-    DRIP.total_value()
+    # DRIP.total_value()
+
+    print(DRIP.get_dripData(key_name="random_invest_time"))
 
 
