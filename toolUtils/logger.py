@@ -42,7 +42,7 @@ class LogLog():
     def DripLog(self):
 
         LOGNAME = "DripLog"
-        LOGPATH = "logs/DripLogs.log"
+        LOGPATH = f"{os.path.dirname(os.path.dirname(__file__))}/logs/DripLogs.log"
 
         # create logger
         self.logger = logging.getLogger(LOGNAME)
@@ -60,7 +60,7 @@ class LogLog():
     def ArbitrageLog(self):
 
         LOGNAME = "ArbitrageLog"
-        LOGPATH = "logs/ArbitrageLogs.log"
+        LOGPATH = f"{os.path.dirname(os.path.dirname(__file__))}/logs/ArbitrageLogs.log"
 
         # create logger
         self.logger = logging.getLogger(LOGNAME)
