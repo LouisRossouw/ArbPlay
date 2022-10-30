@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     valr_c = Valr()
 
-    COINPAIR = "AVAXZAR"
+    COINPAIR = "USDCZAR"
     COINPAIR_GRP = ["XRPZAR", "ETHZAR", "BTCZAR"]
 
     acc_name = "test"

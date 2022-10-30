@@ -12,6 +12,7 @@ class Settings():
         self.play_money = 10000
         self.print_statements = True
         self.logger_disabled = False
+        self.Notifications = True
 
         # Kucoin
         self.trade_account = "trade"       # use either "trade" or "main" accounts

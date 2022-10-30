@@ -6,11 +6,12 @@ from time import sleep
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import Settings
+import notification_format as N_txtFormat
 import toolUtils.utils as utils
 import toolUtils.logger as LOG
 import Exchanges.valr_exchange as VALR
 
-
+import BotFido.BotNotifications as BotNot
 
 
 class DripDrip():
@@ -22,6 +23,7 @@ class DripDrip():
         self.SETTINGS = Settings.Settings()
         self.VALR_EXCHANGE = VALR.Valr()
         self.LOGLOG = LOG.LogLog().DripLog()
+        self.BOTNOT = BotNot.BotNotification()
 
         self.days = self.SETTINGS.days
         self.invest_time = self.SETTINGS.invest_time # first 2 digits of a digital watch.
@@ -30,6 +32,7 @@ class DripDrip():
         self.data = self.SETTINGS.drip_invest
 
         self.LOGLOG.info("Drip Initialized.")
+        
 
 
 
@@ -76,9 +79,13 @@ class DripDrip():
                                     k=int(float(amount_capital)))
 
         data = {}
+        total = []
+        
         for i in coins:
 
             coin_amount = randomList.count(i)
+            total.append(coin_amount)
+
             round_down = utils.round_down_float(coin_amount / self.days)
             data[i] = round_down
 
@@ -86,6 +93,10 @@ class DripDrip():
 
         # Reset
         self._set_CALCULATE_data(data=data)
+
+        # # TeleGram Notification
+        calc_txtFormat = N_txtFormat.calculation_format(data, total, amount_capital, self.days)
+        self.BOTNOT.send_ADMIN_notification(text=calc_txtFormat)
 
 
 
@@ -134,7 +145,55 @@ class DripDrip():
             self.VALR_EXCHANGE.subAcc_BUY_ZAR_to_coin(amount_in_coins=amount_coins_buy, 
                                                       coin_pair=coin + "ZAR", 
                                                       sub_ID=acc_ID)
+
+            # TeleGram Notification
+            calc_txtFormat = N_txtFormat.buy_format(drip_data, coin, amount_coins_buy, amount)
+            self.BOTNOT.send_ADMIN_notification(text=calc_txtFormat)
+
             sleep(5)
+
+        # Get Summary
+        self.total_value()
+
+
+
+
+    def total_value(self):
+        """ calculates total value of current Drip account. """
+
+        drip_data = utils.read_json(self.drip_data_path)
+
+        valr_sub_acc = self.SETTINGS.valr_DripDrip_acc_name
+        acc_ID = self.VALR_EXCHANGE.get_account_ID(acc_label=valr_sub_acc)
+
+        balances = self.VALR_EXCHANGE.get_balances(acc_ID=acc_ID, account_type="sub")
+        market_data = self.VALR_EXCHANGE.Valr_client.get_market_summary()
+        plan = drip_data["plan"]
+
+        count_value = []
+
+        txt = ""
+        for plan_currency in plan:
+
+            for i in balances:
+                currency = i["currency"]
+                available = i["available"]
+
+
+                if plan_currency == currency:
+                    askPrice = self.VALR_EXCHANGE.return_coinPair_data(coinpair=currency + "ZAR", market_data=market_data)["askPrice"]
+                    calculate_to_ZAR = round(float(available) * float(askPrice),3)
+
+                    txt += f"\n🔹{currency} : {str(round(float(available),5))} R{str(askPrice)} R{str(calculate_to_ZAR)}"
+                    count_value.append(calculate_to_ZAR)
+                    
+                elif "ZAR" == currency:
+                    ZAR_available = i["available"]
+
+        total_sum = round(sum(count_value),2)
+        percentage = utils.get_percentage_difference(total_sum, 5000)
+        formatted_txt = f"💎💎 DripDrip Summary: \n{txt}\n\nTotal R{str(total_sum)} / {str(round(percentage,1))}%"
+        self.BOTNOT.send_ADMIN_notification(text=formatted_txt)
 
 
 
@@ -242,6 +301,7 @@ class DripDrip():
 if __name__ == "__main__":
 
     DRIP = DripDrip()
-    DRIP.run()
+    # DRIP.calculate_plan(5000)
+    DRIP.total_value()
 
 
