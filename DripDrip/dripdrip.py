@@ -6,7 +6,7 @@ from time import sleep
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import Settings
-import notification_format as N_txtFormat
+import DripDrip.notification_format as N_txtFormat
 import toolUtils.utils as utils
 import toolUtils.logger as LOG
 import Exchanges.valr_exchange as VALR
