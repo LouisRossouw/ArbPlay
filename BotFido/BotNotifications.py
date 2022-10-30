@@ -28,13 +28,11 @@ class BotNotification():
 
 
     def send_ADMIN_notification(self, text):
-        """ Send notification to Admin ID """
+        """ Send notification to Admin ID only. """
 
         if self.notifications == True:
-
             self.bot.send_message(chat_id=self.ADMIN_ID, 
-                                  allow_sending_without_reply=True, 
-                                  text=str(text))
+                                  allow_sending_without_reply=True, text=str(text))
 
 
 
