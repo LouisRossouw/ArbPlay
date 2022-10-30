@@ -179,9 +179,10 @@ class DripDrip():
                 currency = i["currency"]
                 available = i["available"]
 
-
                 if plan_currency == currency:
-                    askPrice = self.VALR_EXCHANGE.return_coinPair_data(coinpair=currency + "ZAR", market_data=market_data)["askPrice"]
+                    askPrice = self.VALR_EXCHANGE.return_coinPair_data(coinpair=currency + "ZAR", 
+                                                                       market_data=market_data)["askPrice"]
+                                                                       
                     calculate_to_ZAR = round(float(available) * float(askPrice),3)
 
                     txt += f"\n🔹{currency} : {str(round(float(available),5))} R{str(askPrice)} R{str(calculate_to_ZAR)}"
@@ -242,10 +243,7 @@ class DripDrip():
 
                         day_count = int(self.get_dripData(key_name="day_count"))
 
-                        self.set_dripData(key_name="already_invested", data=True)
-                        self.set_dripData(key_name="last_invested_date", data=utils.get_dates()[0])
-                        self.set_dripData(key_name="day_count", data=day_count + 1)
-                        self.set_dripData(key_name="random_invest_time", data=self.random_invest_time())
+                        self._buy_set_dripData(day_count)
 
                         total_days = self.get_dripData(key_name="days_total")
 
@@ -292,6 +290,17 @@ class DripDrip():
         print("enough_funds:", enough_funds, ZAR_balances)
 
         return enough_funds, ZAR_balances
+
+
+
+
+    def _buy_set_dripData(self, day_count):
+        """ Sets data after buying all coins. """
+
+        self.set_dripData(key_name="already_invested", data=True)
+        self.set_dripData(key_name="last_invested_date", data=utils.get_dates()[0])
+        self.set_dripData(key_name="day_count", data=day_count + 1)
+        self.set_dripData(key_name="random_invest_time", data=self.random_invest_time())
 
 
 
