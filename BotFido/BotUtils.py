@@ -17,7 +17,6 @@ def check_usr(bot,
 
     user_full_alias = f"{usr_name}-{usr_surname}-{usr_user_name}-{str(usr_id)}"
 
-
     if user_full_alias != TELEBOT_ADMIN_ALIAS:
         IS_ADMIN = False
 
@@ -26,20 +25,43 @@ def check_usr(bot,
 
     if IS_ADMIN != True:
 
-        text_line_1 = 'WARNING: \n\n* Unrecognized user interacted with TurtleTurtle *'
-        text_line_2 = '\n\nUSR Details:'
-        text_line_3 = '\n\nusr_name: ' + str(usr_name) + '\nusr_surname: ' + str(usr_surname) + '\nusr_nickname: ' + str(usr_user_name)
-        text_line_4 = '\n\nusr_id: ' + str(usr_id) + '\nusr_is_bot: ' + str(usr_is_bot) + '\nusr_language: ' + str(usr_language) + '\n\nusr_content_type: ' + str(usr_content_type) + '\nText: ' + str(usr_text)
-
-        # To Admin / Owner of TurtleTurtle
-        text_msg = text_line_1 + text_line_2 + text_line_3 + text_line_4
-        bot.send_message(chat_id=ADMIN_ID, allow_sending_without_reply=True, text=text_msg)
-
-        # To Un-Authorized USER
-        text_warning = str(usr_name) + '_' + str(usr_surname) + '\n\n .. \n\nYou are not authorized to use this Bot'
-        bot.send_message(chat_id=usr_id, allow_sending_without_reply=True, text=text_warning)
+        admin_False(bot, usr_name, 
+                    usr_surname, usr_user_name, 
+                    usr_id, usr_is_bot, usr_language, 
+                    usr_content_type, usr_text, ADMIN_ID)
 
     elif IS_ADMIN == True:
         pass
 
     return IS_ADMIN
+
+
+
+
+def admin_False(bot, usr_name, 
+                usr_surname, usr_user_name, 
+                usr_id, usr_is_bot, usr_language, 
+                usr_content_type, usr_text, ADMIN_ID):
+
+    """ If Admin != False run this function. """
+
+    txt1 = 'WARNING: \n\n* Unrecognized user interacted with TurtleTurtle *'
+    txt2 = '\n\nUSR Details:'
+    txt3 = '\n\nusr_name: ' + str(usr_name) + '\nusr_surname: '
+    txt4 = str(usr_surname) + '\nusr_nickname: ' + str(usr_user_name)
+    txt5 = '\n\nusr_id: ' + str(usr_id) + '\nusr_is_bot: ' + str(usr_is_bot) + '\nusr_language: '
+    txt6 = str(usr_language) + '\n\nusr_content_type: ' + str(usr_content_type) + '\nText: ' + str(usr_text)
+
+    # To Admin / Owner of TurtleTurtle
+    text_msg = txt1 + txt2 + txt3 + txt4 + txt5 + txt6
+    bot.send_message(chat_id=ADMIN_ID, 
+                     allow_sending_without_reply=True, text=text_msg)
+
+    # To Un-Authorized USER
+    txt_warning1 = str(usr_name) + '_' + str(usr_surname)
+    txt_warning2 = '\n\n .. \n\nYou are not authorized to use this Bot'
+    bot.send_message(chat_id=usr_id, 
+                    allow_sending_without_reply=True, text=txt_warning1+txt_warning2)
+
+
+
