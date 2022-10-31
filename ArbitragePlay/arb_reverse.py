@@ -13,6 +13,7 @@ from Settings import Settings
 from Exchanges.kucoin_exchange import Kucoin
 from Exchanges.valr_exchange import Valr
 
+import BotFido.BotNotifications as BotNot
 import toolUtils.logger as LOG
 
 
@@ -30,7 +31,7 @@ class Algo_arbitrage_reverse():
         self.SETTINGS = Settings()
         self.DATA_LOG = Data_log()
         self.LOGLOG = LOG.LogLog().ArbitrageLog()
-
+        self.BOTNOT = BotNot.BotNotification()
 
 
 
@@ -75,6 +76,7 @@ class Algo_arbitrage_reverse():
         rounded_coins = math.floor(amount_coins_buy * 100)/100.0
         self.valr.BUY_ZAR_to_coin(amount_in_coins=rounded_coins, coin_pair=coin+"ZAR")
 
+        self.BOTNOT.send_ADMIN_notification(text=f"🔰♻️Valr - Reverse-Arbitrage - \n\n{str(coin)}\namount_coins:{str(rounded_coins)}\naskPrice:{str(coin_askPrice)}")
 
         self.DATA_LOG.set_data(key_name="valr_coin_askPrice", data=coin_askPrice)
         self.DATA_LOG.set_data(key_name="valr_coin_amount", data=rounded_coins)
@@ -144,9 +146,11 @@ class Algo_arbitrage_reverse():
                                                                 )
                 executed = True
                 self.LOGLOG.info("Success")
+                self.BOTNOT.send_ADMIN_notification(text=f"🔰♻️Valr - Reverse-Arbitrage - Withdrawing \n\n{str(coin)} to Kucoin.")
             except Exception as e:
                 print("WithDraw Failed")
                 self.LOGLOG.error(e)
+                self.BOTNOT.send_ADMIN_notification(text=f"🔰🆘Valr - Reverse-Arbitrage - Withdrawing FAILED \n\n{str(e)}")
                 executed = False
         
         return executed
@@ -217,7 +221,7 @@ class Algo_arbitrage_reverse():
 
         # Transfer coins from main to trade account to be ready to sell.
         if funds_arived == True:
-
+            self.BOTNOT.send_ADMIN_notification(text=f"🔰♻️Valr - Reverse-Arbitrage - \n\n{str(coin)} funds Arived to Kucoin.🤞")
             status = self._inner_trasfer(coin=coin)
 
             self.DATA_LOG.set_data(key_name="rebalancing", data=True)

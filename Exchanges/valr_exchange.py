@@ -3,6 +3,9 @@ import os
 from valr_python import Client
 from valr_python.exceptions import IncompleteOrderWarning
 
+import BotFido.BotNotifications as BotNot
+
+import toolUtils.logger as LOG
 
 
 class Valr():
@@ -11,11 +14,25 @@ class Valr():
     def __init__(self):
         """ Initialize trading Valr. """
 
+        self.LOGLOG = LOG.LogLog().ExchangeLog()
+        self.BOTNOT = BotNot.BotNotification()
+
         self.VALR_KEY = os.getenv('VALR_API_KEY')
         self.VALR_SECRET_KEY = os.getenv('VALR_API_KEY_SECRET')
         self.Valr_client = Client(api_key=self.VALR_KEY, api_secret=self.VALR_SECRET_KEY)
 
 
+
+
+    def log_errors(self, e, log_error_1, log_error_2):
+        """ logs errors and sends admin notification. """
+
+        # Logs
+        self.LOGLOG.error(e)
+
+        # Telegram Admin notification.
+        self.BOTNOT.send_ADMIN_notification(text=log_error_1)
+        self.BOTNOT.send_ADMIN_notification(text=log_error_2 + str(e))
 
 
 
@@ -134,11 +151,20 @@ class Valr():
     def SELL_coin_to_ZAR(self, amount_in_coins, coin_pair):
         """ Sell coin to Zar. """  
 
-        self.Valr_client.post_market_order(
-                            pair=str(coin_pair),
-                            side='SELL',
-                            base_amount= str(amount_in_coins)
-                            )
+        log_success = f"VALR SELL_coin_to_ZAR: {str(coin_pair)} | amount_in_coins:{str(amount_in_coins)}"
+        log_error_1 = f"⛔️ VALR: ATTEMPTED SELL_coin_to_ZAR: \n\n{str(coin_pair)}\namount_in_coins: {str(amount_in_coins)}"
+        log_error_2 = f"⛔️ Error: SELL_coin_to_ZAR: "
+
+        self.LOGLOG.info(log_success)
+
+        try:
+            self.Valr_client.post_market_order(
+                                pair=str(coin_pair),
+                                side='SELL',
+                                base_amount= str(amount_in_coins)
+                                )
+        except Exception as e:
+            self.log_errors(e, log_error_1, log_error_2)
 
 
 
@@ -146,23 +172,45 @@ class Valr():
     def BUY_ZAR_to_coin(self, amount_in_coins, coin_pair):
         """ Buy Zar to coin. """
 
-        self.Valr_client.post_market_order(
-                            pair=str(coin_pair),
-                            side='BUY',
-                            base_amount= str(amount_in_coins),
-                            )
+        log_success = f"VALR BUY_ZAR_to_coin: {str(coin_pair)} | amount_in_coins:{str(amount_in_coins)}"
+        log_error_1 = f"⛔️ VALR: ATTEMPTED BUY_ZAR_to_coin: \n\n{str(coin_pair)}\namount_in_coins: {str(amount_in_coins)}"
+        log_error_2 = f"⛔️ Error: BUY_ZAR_to_coin: "
+
+        self.LOGLOG.info(log_success)
+
+        try:
+            self.Valr_client.post_market_order(
+                                pair=str(coin_pair),
+                                side='BUY',
+                                base_amount= str(amount_in_coins),
+                                )
+        except Exception as e:
+            self.log_errors(e, log_error_1, log_error_2)
+
 
 
 
     def subAcc_BUY_ZAR_to_coin(self, amount_in_coins, coin_pair, sub_ID):
         """ Buy Zar to coin. """
 
-        self.Valr_client.post_market_order(
-                            pair=str(coin_pair),
-                            side='BUY',
-                            base_amount= str(amount_in_coins),
-                            subaccount_id= sub_ID
-                            )
+        log_success = f"VALR subAcc_BUY_ZAR_to_coin: {str(coin_pair)} | amount_in_coins:{str(amount_in_coins)}"
+        log_error_1 = f"⛔️ VALR: ATTEMPTED subAcc_BUY_ZAR_to_coin: \n\n{str(coin_pair)}\namount_in_coins: {str(amount_in_coins)}\nsub_id: {str(sub_ID)}"
+        log_error_2 = f"⛔️ Error: subAcc_BUY_ZAR_to_coin: "
+
+        self.LOGLOG.info(log_success)
+
+        try:
+            self.Valr_client.post_market_order(
+                                pair=str(coin_pair),
+                                side='BUY',
+                                base_amount= str(amount_in_coins),
+                                subaccount_id= sub_ID
+                                )
+        except Exception as e:
+            self.log_errors(e, log_error_1, log_error_2)
+
+
+
 
 
 if __name__ == "__main__":

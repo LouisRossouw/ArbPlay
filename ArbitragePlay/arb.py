@@ -11,6 +11,8 @@ from Settings import Settings
 from Exchanges.kucoin_exchange import Kucoin
 from Exchanges.valr_exchange import Valr
 
+import BotFido.BotNotifications as BotNot
+
 import toolUtils.logger as LOG
 
 
@@ -25,7 +27,7 @@ class Algo_arbitrage():
         self.SETTINGS = Settings()
         self.DATA_LOG = Data_log()
         self.LOGLOG = LOG.LogLog().ArbitrageLog()
-
+        self.BOTNOT = BotNot.BotNotification()
 
 
     def execute_trade(self, coin, percent_difference, percent_increase):
@@ -55,6 +57,8 @@ class Algo_arbitrage():
                 # 2.3. execute transfer to local wallet.
                 if KUCOIN_Funds_ready == True:
                     self.is_withdrawn = self._execute_withdraw(coin)
+
+                self.BOTNOT.send_ADMIN_notification(text=f"🔰Kucoin - Arbitrage - \n\n{str(coin)}\ndiff:{str(percent_difference)}\nincr:{str(percent_increase)}")
 
         # 3. valr - check for funds, execute sell order when they have arived.
         funds_arived_valr = self._check_valr_funds(self.is_withdrawn, coin)
@@ -168,6 +172,7 @@ class Algo_arbitrage():
 
         if VALR_Funds_ready == True:
             print("Funds have arived on valr: ", coin)
+            self.BOTNOT.send_ADMIN_notification(text=f"🔰Valr - Arbitrage - \n\n{str(coin)} arived on Valr")
             self.LOGLOG.info(f"Valr - Funds arived on Valr: {str(coin)}")
 
         return VALR_Funds_ready
@@ -199,6 +204,7 @@ class Algo_arbitrage():
             
             if float(ZAR_balance) >= float(500):
                 self.LOGLOG.info(f"Sold = True | R{str(ZAR_balance)}")
+                self.BOTNOT.send_ADMIN_notification(text=f"🔰Valr - Arbitrage - \n🎉SOLD {str(coin)}🎊\n\n💰 R{str(ZAR_balance)}")
                 break
 
         # Set system to reverse arbitrage - we need to get the funds back to Kucoin at the cheapest cost.

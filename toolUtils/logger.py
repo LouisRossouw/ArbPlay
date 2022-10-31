@@ -75,6 +75,23 @@ class LogLog():
 
 
 
+    def ExchangeLog(self):
+
+        LOGNAME = "ExchangeLog"
+        LOGPATH = f"{os.path.dirname(os.path.dirname(__file__))}/logs/ExchangeLogs.log"
+
+        # create logger
+        self.logger = logging.getLogger(LOGNAME)
+        self.logger.setLevel(logging.DEBUG)
+
+        self._logHandlers(LOGPATH)
+
+        self.logger.disabled = self.SETTINGS.logger_disabled
+
+        return self.logger
+
+
+
 
 if __name__ == "__main__":
 

@@ -5,6 +5,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from kucoin.client import Client
 from Settings import Settings
+import BotFido.BotNotifications as BotNot
+
+import toolUtils.logger as LOG
 
 
 class Kucoin():
@@ -14,6 +17,8 @@ class Kucoin():
         """ Initialize trading Kucoin. """
 
         self.SETTINGS = Settings()
+        self.LOGLOG = LOG.LogLog().ExchangeLog()
+        self.BOTNOT = BotNot.BotNotification()
 
         api_key = os.getenv('KUCOIN_API_KEY')
         api_secret = os.getenv('KUCOIN_API_KEY_SECRET')
@@ -26,12 +31,36 @@ class Kucoin():
 
 
 
+
+    def log_errors(self, e, log_error_1, log_error_2):
+        """ logs errors and sends admin notification. """
+
+        # Logs
+        self.LOGLOG.error(e)
+
+        # Telegram Admin notification.
+        self.BOTNOT.send_ADMIN_notification(text=log_error_1)
+        self.BOTNOT.send_ADMIN_notification(text=log_error_2 + str(e))
+
+
+
+
     def inner_transfer(self, coin, from_account, to_account, amount_coins):
         """ Transfers coins from trade account to main account or vice versa. """
 
-        self.client.create_inner_transfer(currency=coin, 
-                                          from_type=from_account, 
-                                          to_type=to_account, amount=amount_coins)
+        log_success = f"inner_transfer: {str(coin)}|from_acc:{str(from_account)}|to_acc:{str(to_account)}"
+        log_error_1 = f"⛔️ Kucoin: ATTEMPTED inner_transfer: \n\n{str(coin)}\nFrom_acc: {str(from_account)}\nTo_acc: {str(to_account)}"
+        log_error_2 = f"⛔️ Error: Inner_transfer: "
+
+        self.LOGLOG.info(log_success)
+
+        try:
+            self.client.create_inner_transfer(currency=coin, 
+                                            from_type=from_account, 
+                                            to_type=to_account, amount=amount_coins)
+        except Exception as e:
+            self.log_errors(e, log_error_1, log_error_2)
+
 
 
 
@@ -137,9 +166,17 @@ class Kucoin():
 
         allow_place_order = self.SETTINGS.execute_order
 
+        log_success = f"Kucoin buy_coin: coin_pair:{str(coin_pair)} | USDT:{str(amount_in_USDT)}"
+        log_error_1 = f"⛔️ Kucoin: ATTEMPTED buy_coin: \n\n{str(coin_pair)}\nUSDT: {str(amount_in_USDT)}"
+        log_error_2 = f"⛔️ Error: buy_coin: "
+
         if allow_place_order == True:
-                                        # 'AFK-USDT'
-            self.client.create_market_order(coin_pair, "buy", funds=amount_in_USDT)
+            self.LOGLOG.info(log_success)              
+            try:                               # 'AFK-USDT            
+                self.client.create_market_order(coin_pair, "buy", funds=amount_in_USDT)
+            except Exception as e:
+                self.log_errors(e, log_error_1, log_error_2)
+
         elif allow_place_order == False:
             print("** placing orders are dissabled in the Settings.py file. ** ")
 
@@ -151,10 +188,18 @@ class Kucoin():
 
         allow_place_order = self.SETTINGS.execute_order
 
+        log_success = f"Kucoin sell_coin: coin_pair:{str(coin_pair)} | coins_amount:{str(amount_in_coins)}"
+        log_error_1 = f"⛔️ Kucoin: ATTEMPTED sell_coin: \n\n{str(coin_pair)}\ncoins_amount: {str(amount_in_coins)}"
+        log_error_2 = f"⛔️ Error: sell_coin: "
+
         if allow_place_order == True:
-                                        # 'AFK-USDT'
-            self.client.create_market_order(coin_pair, "sell", 
-                                            size=amount_in_coins)
+            self.LOGLOG.info(log_success)
+            try:                        # 'AFK-USDT'
+                self.client.create_market_order(coin_pair, "sell", 
+                                                size=amount_in_coins)
+            except Exception as e:
+                self.log_errors(e, log_error_1, log_error_2)
+
         elif allow_place_order == False:
             print("** placing orders are dissabled in the Settings.py file. ** ")
 
@@ -167,11 +212,20 @@ class Kucoin():
         allow_withdraws = self.SETTINGS.execute_withdrawels
         total = str(amount_of_coin).split(".")[0] # remove decimals.
 
+        log_success = f"Kucoin withdrawal_to_address: coin:{str(coin)} | coins_amount:{str(amount_of_coin)} | addr: {str(wallet_address)}"
+        log_error_1 = f"⛔️ Kucoin: ATTEMPTED withdrawal_to_address: \n\n{str(coin)}\namount_of_coins: {str(amount_of_coin)}"
+        log_error_2 = f"⛔️ Error: withdrawal_to_address: "
+
         if allow_withdraws == True:
-            self.client.create_withdrawal(currency=coin, 
-                                          amount=total, 
-                                          address=wallet_address, 
-                                          memo=memo_tag, remark="Test")
+            self.LOGLOG.info(log_success)
+            try:
+                self.client.create_withdrawal(currency=coin, 
+                                            amount=total, 
+                                            address=wallet_address, 
+                                            memo=memo_tag)
+            except Exception as e:
+                self.log_errors(e, log_error_1, log_error_2)
+
         else:
             print("** Withdrawels are dissabled in the Settings.py file. ** ")
 
@@ -190,11 +244,11 @@ if __name__ == "__main__":
     GET_ACCOUNT = False
     GET_FIAT_PRICE_FOR_COIN = False
     WITHDRAWEL_TO_ADDRESS = False
-    SELL_COIN = False
+    SELL_COIN = True
     BUY_COIN = False
     GET_WITHDRAWAL_QUOTES = False
     INNER_TRANSFER = False
-    GET_DEPOSIT_ADDRESS = True
+    GET_DEPOSIT_ADDRESS = False
 
 
     if GET_DEPOSIT_ADDRESS == True:
@@ -240,10 +294,10 @@ if __name__ == "__main__":
         # AVAX +- 5 seconds @ 0.1 / 3 ZAR - good - mght not be allowed to withdraw.
 
     if SELL_COIN == True:
-        kucoin_class.sell_coin(coin_pair="AFK-USDT", amount_in_coins=10)
+        kucoin_class.sell_coin(coin_pair="AFKKK-USDc", amount_in_coins=10)
 
     if BUY_COIN == True:
-        kucoin_class.buy_coin(coin_pair="XRP-USDT", amount_in_USDT=10)
+        kucoin_class.buy_coin(coin_pair="XRPZ-USDC", amount_in_USDT=10)
 
     if GET_WITHDRAWAL_QUOTES == True:
         print(kucoin_class.get_withdrawal_quotas(coin="AVAX"))

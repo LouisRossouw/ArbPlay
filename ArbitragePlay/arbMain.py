@@ -14,6 +14,8 @@ from Exchanges.valr_exchange import Valr
 from arb import Algo_arbitrage
 from arb_reverse import Algo_arbitrage_reverse
 
+import BotFido.BotNotifications as BotNot
+
 import toolUtils.logger as LOG
 
 
@@ -29,6 +31,7 @@ class AlgoMain():
         self.SETTINGS = Settings()
         self.DATA_LOG = Data_log()
         self.LOGLOG = LOG.LogLog().ArbitrageLog()
+        self.BOTNOT = BotNot.BotNotification()
 
         self.Algo_arbitrage = Algo_arbitrage()
         self.Algo_arbitrage_reverse = Algo_arbitrage_reverse()
@@ -151,7 +154,7 @@ class AlgoMain():
                                                     accounts=accounts, 
                                                     account_type="trade")["balance"]
 
-            stdout_txt = f"KUCOIN - selling: {str(amount_coins)}|VR:{str(VLRrcn_pr)}|KC:{str(KCcn_pr)}|{str(prcnt)}%"
+            stdout_txt = f"KUCOIN - Rebalancing: selling: \n\namount_coins:{str(amount_coins)}\nVR:{str(VLRrcn_pr)}\nKC:{str(KCcn_pr)}\n{str(prcnt)}%"
 
             print(stdout_txt)
             self.LOGLOG.info(stdout_txt)
@@ -162,6 +165,8 @@ class AlgoMain():
             self.DATA_LOG.set_data(key_name="rebalancing", data=False)
 
             self.LOGLOG.info("Setting Data: position=arbitrage | rebalancing=False")
+
+            self.BOTNOT.send_ADMIN_notification(text=stdout_txt)
 
 
 
