@@ -52,7 +52,7 @@ class Algo_arbitrage():
                 # 2.2 Buy coin and return True if in account.
                 KUCOIN_Funds_ready = self._buy_coins(coin, 
                                                      coin + '-USDT', 
-                                                     enough_usdc[1])
+                                                     int(enough_usdc[1]) - 1)
 
                 # 2.3. execute transfer to local wallet.
                 if KUCOIN_Funds_ready == True:
