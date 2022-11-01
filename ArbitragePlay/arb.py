@@ -58,18 +58,18 @@ class Algo_arbitrage():
                 if KUCOIN_Funds_ready == True:
                     self.is_withdrawn = self._execute_withdraw(coin)
 
-                self.BOTNOT.send_ADMIN_notification(text=f"🔰Kucoin - Arbitrage - \n\n{str(coin)}\ndiff:{str(percent_difference)}\nincr:{str(percent_increase)}")
+                    self.BOTNOT.send_ADMIN_notification(text=f"🔰Kucoin - Arbitrage - \n\n{str(coin)}\ndiff:{str(percent_difference)}\nincr:{str(percent_increase)}")
 
-        # 3. valr - check for funds, execute sell order when they have arived.
-        funds_arived_valr = self._check_valr_funds(self.is_withdrawn, coin)
-        
-        if funds_arived_valr == True:
-            if self.SETTINGS.execute_order_valr == True:
-                self._execute_sell_coins_valr(coin)
+                    # 3. valr - check for funds, execute sell order when they have arived.
+                    funds_arived_valr = self._check_valr_funds(self.is_withdrawn, coin)
+                    
+                    if funds_arived_valr == True:
+                        if self.SETTINGS.execute_order_valr == True:
+                            self._execute_sell_coins_valr(coin)
 
-                coin_quotes = self.kucoin.get_withdrawal_quotas(coin=coin)
-                self.DATA_LOG.set_data(key_name="Kucoin_coin_fee", 
-                                       data=coin_quotes["withdrawMinFee"])
+                            coin_quotes = self.kucoin.get_withdrawal_quotas(coin=coin)
+                            self.DATA_LOG.set_data(key_name="Kucoin_coin_fee", 
+                                                data=coin_quotes["withdrawMinFee"])
 
 
 
@@ -102,8 +102,13 @@ class Algo_arbitrage():
         """ Buy order of specific coins. and while loop until coins arive."""
 
         self.LOGLOG.info(f"Kucoin - Buying coins: {str(coin)}|pairs:{str(coin_pairs)}|USDT:{str(USDT_balance)}")
-        self.kucoin.buy_coin(coin_pair=coin_pairs, amount_in_USDT=USDT_balance)
-        KUCOIN_Funds_ready = self._wait_for_funds_KUCOIN(coin, acc_type="trade")
+        try:
+            self.kucoin.buy_coin(coin_pair=coin_pairs, amount_in_USDT=USDT_balance)
+            KUCOIN_Funds_ready = self._wait_for_funds_KUCOIN(coin, acc_type="trade")
+        except Exception as e:
+            self.LOGLOG.error(f"Kucoin - Buying coins Error: {str(e)}")
+            KUCOIN_Funds_ready = False
+
         
         return KUCOIN_Funds_ready
 
