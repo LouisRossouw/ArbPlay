@@ -46,30 +46,31 @@ class Algo_arbitrage():
         # 2.1. BUY WITH USDC, if no USDC available, then pass
         if self.SETTINGS.execute_order == True:
             if enough_usdc[0] == True:
+                if coin != "AVAX":
 
-                self.DATA_LOG.set_data(key_name="Kucoin_USDT", data=enough_usdc[1])
+                    self.DATA_LOG.set_data(key_name="Kucoin_USDT", data=enough_usdc[1])
 
-                # 2.2 Buy coin and return True if in account.
-                KUCOIN_Funds_ready = self._buy_coins(coin, 
-                                                     coin + '-USDT', 
-                                                     int(enough_usdc[1]) - 1)
+                    # 2.2 Buy coin and return True if in account.
+                    KUCOIN_Funds_ready = self._buy_coins(coin, 
+                                                        coin + '-USDT', 
+                                                        int(enough_usdc[1]) - 1)
 
-                # 2.3. execute transfer to local wallet.
-                if KUCOIN_Funds_ready == True:
-                    self.is_withdrawn = self._execute_withdraw(coin)
+                    # 2.3. execute transfer to local wallet.
+                    if KUCOIN_Funds_ready == True:
+                        self.is_withdrawn = self._execute_withdraw(coin)
 
-                    self.BOTNOT.send_ADMIN_notification(text=f"🔰Kucoin - Arbitrage - \n\n{str(coin)}\ndiff:{str(percent_difference)}\nincr:{str(percent_increase)}")
+                        self.BOTNOT.send_ADMIN_notification(text=f"🔰Kucoin - Arbitrage - \n\n{str(coin)}\ndiff:{str(percent_difference)}\nincr:{str(percent_increase)}")
 
-                    # 3. valr - check for funds, execute sell order when they have arived.
-                    funds_arived_valr = self._check_valr_funds(self.is_withdrawn, coin)
-                    
-                    if funds_arived_valr == True:
-                        if self.SETTINGS.execute_order_valr == True:
-                            self._execute_sell_coins_valr(coin)
+                        # 3. valr - check for funds, execute sell order when they have arived.
+                        funds_arived_valr = self._check_valr_funds(self.is_withdrawn, coin)
+                        
+                        if funds_arived_valr == True:
+                            if self.SETTINGS.execute_order_valr == True:
+                                self._execute_sell_coins_valr(coin)
 
-                            coin_quotes = self.kucoin.get_withdrawal_quotas(coin=coin)
-                            self.DATA_LOG.set_data(key_name="Kucoin_coin_fee", 
-                                                data=coin_quotes["withdrawMinFee"])
+                                coin_quotes = self.kucoin.get_withdrawal_quotas(coin=coin)
+                                self.DATA_LOG.set_data(key_name="Kucoin_coin_fee", 
+                                                    data=coin_quotes["withdrawMinFee"])
 
 
 
@@ -135,25 +136,27 @@ class Algo_arbitrage():
             valr_coin_info = self.valr.return_account_wallet_address(coin=coin, 
                                                                     subaccount_id="main", 
                                                                     account_type="main")
+            if valr_coin_info != False:
+                # If there is no memo tag, then catch exception.
+                try:
+                    valr_memo_TAG = valr_coin_info["paymentReference"]
+                except Exception as e:
+                    valr_memo_TAG = ""
+                    
+                valr_coin_address = valr_coin_info["address"]
+                result = self.kucoin.withdrawal_to_address(
+                                                        coin=coin, 
+                                                        amount_of_coin=coin_account, 
+                                                        wallet_address=valr_coin_address, 
+                                                        memo_tag=valr_memo_TAG) # Transfer to valr exchange.
 
-            # If there is no memo tag, then catch exception.
-            try:
-                valr_memo_TAG = valr_coin_info["paymentReference"]
-            except Exception as e:
-                valr_memo_TAG = ""
-                
-            valr_coin_address = valr_coin_info["address"]
-            result = self.kucoin.withdrawal_to_address(
-                                                       coin=coin, 
-                                                       amount_of_coin=coin_account, 
-                                                       wallet_address=valr_coin_address, 
-                                                       memo_tag=valr_memo_TAG) # Transfer to valr exchange.
+                self.DATA_LOG.set_data(key_name="Kucoin_coin", data=coin)
+                self.DATA_LOG.set_data(key_name="Kucoin_amount",data=coin_account)
 
-            self.DATA_LOG.set_data(key_name="Kucoin_coin", data=coin)
-            self.DATA_LOG.set_data(key_name="Kucoin_amount",data=coin_account)
-
-            print("withdrawn ", result)
-            is_withdrawn = True
+                print("withdrawn ", result)
+                is_withdrawn = True
+            else:
+                is_withdrawn = False
 
         except Exception as e:
             print("Withdraw failed ", print(e))

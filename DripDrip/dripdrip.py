@@ -87,7 +87,9 @@ class DripDrip():
             total.append(coin_amount)
 
             round_down = utils.round_down_float(coin_amount / self.days)
-            data[i] = round_down
+            data[i] = [round_down, self.random_invest_time(), False]
+
+            
 
             self.LOGLOG.info(f"{i}: {str(round_down)}")
 
@@ -97,7 +99,6 @@ class DripDrip():
         # # TeleGram Notification
         calc_txtFormat = N_txtFormat.calculation_format(data, total, amount_capital, self.days)
         self.BOTNOT.send_ADMIN_notification(text=calc_txtFormat)
-
 
 
 
@@ -127,8 +128,8 @@ class DripDrip():
 
         for coin in plan:
 
-            amount = plan[coin]
-        
+            amount = plan[coin][0]
+
             valr_sub_acc = self.SETTINGS.valr_DripDrip_acc_name
             acc_ID = self.VALR_EXCHANGE.get_account_ID(acc_label=valr_sub_acc)
 
@@ -212,6 +213,97 @@ class DripDrip():
 
 
 
+
+    def randomised_buying(self, time_now, drip_data):
+        """ Randomises the time of day to buy EACH coin. """
+
+        plan = drip_data["plan"]
+
+        count_invested = []
+        coin_count = len(plan)
+
+        for coin in plan:
+
+            amount = plan[coin][0]
+            time = plan[coin][1]
+            invested_today = plan[coin][2]
+
+            count_invested.append(invested_today)
+
+            if invested_today == False:
+                if int(time) == int(time_now):
+                    if drip_data["already_invested"] != True:
+
+                        self.LOGLOG.info(f"Buying coin. {str(coin)} | time:{str(time)} | amount:{str(amount)}")
+                        print("Buy", coin, amount, invested_today)
+
+                        self.random_buy_coin(coin, amount, drip_data)
+
+                        # Reset specific coin and randomise the next days buying time.
+                        drip_data["plan"][coin] = [amount, self.random_invest_time(), True]
+
+                        utils.write_to_json(self.drip_data_path, drip_data)
+
+        invested_count = count_invested.count(True)
+
+        # If all coinds have been invested for the day, then reset the system.
+        if invested_count == coin_count:
+            print("Invested to all coins for the day. ")
+
+            for coin in plan:
+
+                amount = plan[coin][0]
+                time = plan[coin][1]
+                invested_today = plan[coin][2]
+
+                drip_data["plan"][coin] = [amount, time, False]
+                utils.write_to_json(self.drip_data_path, drip_data)
+
+
+            day_count = int(self.get_dripData(key_name="day_count"))
+            self._buy_set_dripData(day_count)
+            total_days = self.get_dripData(key_name="days_total")
+
+            self.total_value()
+
+            if int(day_count + 1) == int(total_days):
+                print("Done")
+
+                self.LOGLOG.info(f"Completed Drip: {str(day_count + 1)} / {str(total_days)}")
+                self.set_dripData(key_name="active", data=False)
+
+
+
+
+    def random_buy_coin(self, coin, amount, drip_data):
+        """ Execute multiple buys for coin in coin list and its amount. """
+        
+        valr_sub_acc = self.SETTINGS.valr_DripDrip_acc_name
+        acc_ID = self.VALR_EXCHANGE.get_account_ID(acc_label=valr_sub_acc)
+
+        market_data = self.VALR_EXCHANGE.Valr_client.get_market_summary()
+        coin_askPrice = self.VALR_EXCHANGE.return_coinPair_data(coinpair=coin+"ZAR", 
+                                                                market_data=market_data)["askPrice"]
+
+        amount_coins_buy = float(float(amount) / float(coin_askPrice))
+        # round_down_coin_amount = utils.round_down_float(amount_coins_buy)
+
+        self.LOGLOG.info(f"Buy: {str(coin)} - {str(amount_coins_buy)} | R {str(amount)}")
+        print("Buy:", str(coin) + " - ", str(amount_coins_buy), "| R" + str(amount))
+
+        self.VALR_EXCHANGE.subAcc_BUY_ZAR_to_coin(amount_in_coins=amount_coins_buy, 
+                                                    coin_pair=coin + "ZAR", 
+                                                    sub_ID=acc_ID)
+
+        # TeleGram Notification
+        calc_txtFormat = N_txtFormat.buy_format(drip_data, coin, amount_coins_buy, amount)
+        self.BOTNOT.send_ADMIN_notification(text=calc_txtFormat)
+
+        sleep(5)
+
+
+
+
     def run_algo(self):
         """ Runs drip. """
 
@@ -225,33 +317,12 @@ class DripDrip():
             # if have not reached total days investing, then buy.
             if active != False:
 
-                # Collect data
                 drip_data = utils.read_json(self.drip_data_path)
-                get_random_invest_time = self.get_dripData(key_name="random_invest_time")
-
                 time_now = utils.get_dates()[1].split(":")[0] # get first hour only
 
-                # If time is now, then invest
-                if int(time_now) == get_random_invest_time:
-                    print("time is golden")
-
-                    if drip_data["already_invested"] != True:
-                        print("have not invested - lets invest now!")
-                        self.LOGLOG.info("Buying coins.")
-
-                        self.buy_coins(drip_data)
-
-                        day_count = int(self.get_dripData(key_name="day_count"))
-
-                        self._buy_set_dripData(day_count)
-
-                        total_days = self.get_dripData(key_name="days_total")
-
-                        if int(day_count + 1) == int(total_days):
-                            print("Done")
-
-                            self.LOGLOG.info(f"Completed Drip: {str(day_count + 1)} / {str(total_days)}")
-                            self.set_dripData(key_name="active", data=False)      
+                if drip_data["already_invested"] == False:
+                    self.randomised_buying(time_now, drip_data)
+         
             else:
                 print("Not active - deposit ZAR to activate bot.")
                 enough_funds = self.check_ZAR()
@@ -324,9 +395,15 @@ class DripDrip():
 if __name__ == "__main__":
 
     DRIP = DripDrip()
-    # DRIP.calculate_plan(5000)
-    # DRIP.total_value()
 
-    print(DRIP.get_dripData(key_name="random_invest_time"))
+    time_now = utils.get_dates()[1].split(":")[0] # get first hour only
+    drip_data = utils.read_json(f"{os.path.dirname(os.path.abspath(__file__))}/data/drip_data.json")
+    # DRIP.randomised_buying(time_now, drip_data)
+    # DRIP.total_value()
+    # DRIP.calculate_plan(5000)
+    DRIP.buy_coins(drip_data)
+
+
+    # print(DRIP.get_dripData(key_name="random_invest_time"))
 
 

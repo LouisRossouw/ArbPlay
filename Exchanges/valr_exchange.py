@@ -1,4 +1,7 @@
 import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from valr_python import Client
 from valr_python.exceptions import IncompleteOrderWarning
@@ -41,11 +44,20 @@ class Valr():
         """ returns the wallet address for the specific coin, 
             if a subaccount ID is not given, it will use the default address. """
 
-        if account_type == "sub":
-            address = self.Valr_client.get_deposit_address(currency_code=coin, 
-                                                           subaccount_id=subaccount_id)
-        if account_type == "main":
-            address = self.Valr_client.get_deposit_address(currency_code=coin)
+        log_success = f"VALR return_account_wallet_address: {str(coin)} | account_type:{str(account_type)}"
+        log_error_1 = f"⛔️ VALR: ATTEMPTED return_account_wallet_address: \n\n{str(coin)}\naccount_type: {str(account_type)}"
+        log_error_2 = f"⛔️ Error: return_account_wallet_address: "
+        self.LOGLOG.info(log_success)
+
+        try:
+            if account_type == "sub":
+                address = self.Valr_client.get_deposit_address(currency_code=coin, 
+                                                            subaccount_id=subaccount_id)
+            if account_type == "main":
+                address = self.Valr_client.get_deposit_address(currency_code=coin)
+        except Exception as e:
+            address = False
+            self.log_errors(e, log_error_1, log_error_2)
 
         return address
 
@@ -224,11 +236,11 @@ if __name__ == "__main__":
 
     GET_VALR_MARKET = False
     VALR_GET_BALANCES = False
-    RETURN_COINPAIR_DATA = True
+    RETURN_COINPAIR_DATA = False
     RETURN_COINPAIR_GROUP = False
     GET_ACCOUNT_ID = False
     GET_BALANCES = False
-    RETURN_ACCOUNT_WALLET_ADDRESS = False
+    RETURN_ACCOUNT_WALLET_ADDRESS = True
     TEST = False
 
     if GET_VALR_MARKET == True:
@@ -254,9 +266,9 @@ if __name__ == "__main__":
         print(valr_c.parse_balances(balances=bal, coin="AVAX"))
 
     if RETURN_ACCOUNT_WALLET_ADDRESS == True:
-        sub_ID = valr_c.get_account_ID(acc_label=acc_name)
-        print(valr_c.return_account_wallet_address(coin="XRP", 
-                                                   subaccount_id=sub_ID, 
+        # sub_ID = valr_c.get_account_ID(acc_label=acc_name)
+        print(valr_c.return_account_wallet_address(coin="AVAX", 
+                                                   subaccount_id="main", 
                                                    account_type="main"))
 
     if TEST == True:
