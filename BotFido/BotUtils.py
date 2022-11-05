@@ -1,3 +1,59 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import toolUtils.utils as utils
+import notification_format
+
+
+
+def read_bot_data(requested_botName):
+    """ Returns data for bot. """
+
+    if requested_botName == "DripDrip":
+        data_path = f"{os.path.dirname(os.path.dirname(__file__))}/DripDrip/data/drip_data.json"
+    if requested_botName == "Arbitrage":
+        data_path = f"{os.path.dirname(os.path.dirname(__file__))}/ArbitragePlay/data/arbitrage.json"
+
+    json_data = utils.read_json(data_path)
+    
+    return json_data
+
+
+
+
+def read_data(requested_dataName):
+    """ Returns data for bot. """
+
+    if requested_dataName == "DripDrip":
+        data_path = f"{os.path.dirname(os.path.dirname(__file__))}/DripDrip/data/drip_data.json"
+    if requested_dataName == "Arbitrage":
+        data_path = f"{os.path.dirname(os.path.dirname(__file__))}/ArbitragePlay/data/arbitrage.json"
+
+    json_data = utils.read_json(data_path)
+    reformatted = notification_format.data_format(json_data, requested_dataName)
+
+    return reformatted
+
+
+
+def read_logs(logname):
+    """ Returns logs. """
+
+    lines = []
+    log_file = f"{os.path.dirname(os.path.dirname(__file__))}/logs/{logname}.log"
+
+    with open(log_file, 'r') as f:
+        for line in f:
+            lines.append(line)
+
+    reformatted = notification_format.logs_format(lines[-15:], logname)
+
+    return reformatted
+
+
+
 
 def check_usr(bot, 
               ADMIN_ID, 
@@ -64,4 +120,6 @@ def admin_False(bot, usr_name,
                     allow_sending_without_reply=True, text=txt_warning1+txt_warning2)
 
 
+if __name__ == "__main__":
 
+    read_logs("DripLogs")
