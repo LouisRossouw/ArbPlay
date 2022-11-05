@@ -7,6 +7,11 @@ import toolUtils.utils as utils
 import notification_format
 
 
+def return_summery():
+    data_path = f"{os.path.dirname(os.path.dirname(__file__))}/DripDrip/data/drip_data.json"
+
+    
+
 
 def read_bot_data(requested_botName):
     """ Returns data for bot. """

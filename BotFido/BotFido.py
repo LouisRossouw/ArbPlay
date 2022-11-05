@@ -8,6 +8,7 @@ from telebot.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 import BotUtils
 
+
 BOT_TOKEN = os.getenv("BOTFRIDO_API_KEY")
 TELEBOT_ADMIN_ALIAS = os.getenv("TELEBOT_ADMIN_ALIAS")
 ADMIN_ID = TELEBOT_ADMIN_ALIAS.split("-")[3]
@@ -48,12 +49,6 @@ def logs_markup():
     return markup
 
 
-def admin_markup():
-    markup = InlineKeyboardMarkup()
-    markup.row_width = 2
-    markup.add(InlineKeyboardButton("😱Check Logs", callback_data="-Check_Logs-"))
-    markup.add(InlineKeyboardButton("🤠Check Data", callback_data="-Check_Data-"))
-
 
 def data_markup():
     markup = InlineKeyboardMarkup()
@@ -87,10 +82,15 @@ def Bot_functions_markup(botName):
     return markup
 
 
+def admin_markup():
+    markup = InlineKeyboardMarkup()
+    markup.row_width = 3
 
+    markup.add(InlineKeyboardButton("CheckLogs", callback_data="-Check_Logs-",),
+                InlineKeyboardButton("CheckData", callback_data="-Check_Data-"),
+                InlineKeyboardButton("Summary", callback_data="-Summary-"))
 
-
-
+    return markup
 
 
 
@@ -111,13 +111,7 @@ def callback_query(call):
 
 
 
-
-
 # Markup Navigation.
-    if call.data == "-admin-":
-         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                text="Admin:", reply_markup=admin_markup())       
-
     if call.data == "-Check_Logs-":
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                 text="Current Logs:", reply_markup=logs_markup())
@@ -134,7 +128,9 @@ def callback_query(call):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                 text="🤖Bot list:", reply_markup=Bots_list_markup()) 
 
-
+    if call.data == "-admin-":
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                text="Admin:", reply_markup=admin_markup())       
 
 
 
@@ -158,8 +154,9 @@ def callback_query(call):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                         text=f"🤖{requested_botName}:\n\nActive:{updated_text}", reply_markup=Bot_functions_markup(requested_botName)) 
 
-    # if "STOP_" in call.data:
 
+    if call.data == "-Summary-" :
+        BotUtils.return_summery()
 
 
     if call.data == "-back-" :
