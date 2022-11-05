@@ -116,7 +116,7 @@ def callback_query(call):
 # Markup Navigation.
     if call.data == "-admin-":
          bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                text="Admin:", reply_markup=logs_markup())       
+                                text="Admin:", reply_markup=admin_markup())       
 
     if call.data == "-Check_Logs-":
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
